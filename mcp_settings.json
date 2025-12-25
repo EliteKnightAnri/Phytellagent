@@ -1,0 +1,23 @@
+{
+    "mcpServers":{
+        "bilibili":{
+            "type": "http",
+            "url": "http://localhost:8080/search",
+            "headers":{
+                "Content-Type":"application/json"
+            }
+        },
+
+        "mysql": {
+              "type": "http",
+              "url": "http://localhost:8081/mcp/call",
+        "env": {
+          "MYSQL_HOST": "localhost",
+          "MYSQL_PORT": "3306",
+          "MYSQL_USER": "root",
+          "MYSQL_PASSWORD": "Toho4717sama",
+          "MYSQL_DATABASE": "itheima"
+        }
+      }
+    }
+}
