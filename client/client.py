@@ -1,9 +1,12 @@
 import json
+import asyncio
 import httpx
 import uvicorn
+from typing import Dict, Any, Optional
 # 这个库调试连接的时候可以用到
 import subprocess
 from openai import AsyncOpenAI
+from fastmcp import Client, FastMCP
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
@@ -18,7 +21,31 @@ SERVERS = {
     "execute_query": {
         "url": "http://127.0.0.1:8081/query",
         "description": "执行一条SQL语句。查询或修改数据库。"
-    }
+    },
+    "get_system_info": {
+        "stdio_cmd": [
+            "python",
+            "-m",
+            "service.tools.system_info_tool",
+        ],
+        "description": "传入一个系统信息字段名，返回对应的值；不传入则返回所有系统信息。",
+    },
+    "get_environment_variables": {
+        "stdio_cmd": [
+            "python",
+            "-m",
+            "service.tools.system_info_tool",
+        ],
+        "description": "返回环境变量映射（字典）。",
+    },
+    "disk_usage": {
+        "stdio_cmd": [
+            "python",
+            "-m",
+            "service.tools.system_info_tool",
+        ],
+        "description": "传入一个路径，返回该路径的磁盘使用情况；不传入则使用系统根路径。",
+    },
 }
 
 # 这是DeepSeek的工具定义格式，是强制的，改格式会导致工具调用失败
@@ -56,6 +83,52 @@ tools = [
                 "required": ["sql"]
             }
         }
+    }, 
+    {
+        "type": "function",
+        "function": {
+            "name": "get_system_info",
+            "description": "传入一个系统信息字段名，返回对应的值；不传入则返回所有系统信息。",
+            "parameters": {
+                "type": "object", 
+                "properties": {
+                    "key": {
+                        "type": "string", 
+                        "description": "系统信息字段名，可选值有：os, os_version, architecture, cpu_count, memory_total_gb, disk_total_gb, hostname, python_version"
+                    }
+                }, 
+                "required": ["key"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_environment_variables",
+            "description": "返回环境变量映射（字典）。",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "disk_usage",
+            "description": "传入一个路径，返回该路径的磁盘使用情况；不传入则使用系统根路径。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "path": {
+                        "type": "string",
+                        "description": "要查询的路径。"
+                    }
+                },
+                "required": ["path"]
+            }
+        }
     }
 ]
 
@@ -66,31 +139,37 @@ client = AsyncOpenAI(
 
 # HTTP POST是典型的IO密集型操作，使用异步函数可以提高并发性能
 async def call_tool(function_name: str, params: dict) -> dict:
-    url = SERVERS.get(function_name)["url"]
-    # 现在的服务器只能解析IPv4地址，所以暂时先替换localhost
-    url = url.replace("localhost", "127.0.0.1")
-    # 打印调试日志
-    print(f"Calling tool {function_name} at {url} with params: {params}")
+    server = SERVERS.get(function_name)
+    if not server:
+        raise ValueError(f"Unknown function: {function_name}")
+
+    # 选择stdio
+    if server.get("stdio_cmd"):
+        stdio_cmd = server.get("stdio_cmd")
+        stdio_client = Client("service.tools.system_info_tool", transport="stdio", cmd=stdio_cmd)
+        async with stdio_client:
+            await stdio_client.ping()
+            print(f"Calling tool {function_name} via stdio with params: {params}")
+            response = await stdio_client.call_tool(function_name, **params)
+            print(f"Response from {function_name} via stdio:", response)
+            return response
+
+    # 选择HTTP
+    url = server.get("url")
     if not url:
         raise ValueError(f"Unknown function: {function_name}")
 
-    payload = {
-        "function": function_name,
-        "params": params
-    }
-    
-    # with是异步上下文管理器，确保资源正确释放
-    # AsyncClient是httpx库的异步HTTP客户端，它的所有请求方法都需要await关键字
+    url = url.replace("localhost", "127.0.0.1")
+    # 打印调试日志
+    print(f"Calling tool {function_name} at {url} with params: {params}")
+
+    payload = {"function": function_name, "params": params}
     async with httpx.AsyncClient() as client:
-        # 通过await等待HTTP响应
         response = await client.post(url, json=payload, timeout=30)
-        # 打印调试日志，如果是503可以看看是不是跨域问题
         print(f"Response status code from {function_name}: {response.status_code}")
         response.raise_for_status()
         response_data = response.json()
         print(f"Raw response from {function_name}:", response_data)
-        
-        # 适配不同工具的返回格式
         if "result" in response_data:
             return response_data["result"]
         elif "response" in response_data:
