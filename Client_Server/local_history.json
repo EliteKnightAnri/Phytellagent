@@ -1,0 +1,36 @@
+{
+  "active_id": "4fcd88ac-f58a-44ab-bd5e-24a90d427e92",
+  "history": [
+    {
+      "id": "4fcd88ac-f58a-44ab-bd5e-24a90d427e92",
+      "title": "你好",
+      "messages": [
+        {
+          "role": "assistant",
+          "content": "👋 **你好！我是聪明的智能助手。**",
+          "attachments": []
+        },
+        {
+          "role": "user",
+          "content": "你好",
+          "attachments": []
+        },
+        {
+          "role": "assistant",
+          "content": "😎 **开始思考 **\n\n你好！我是你的物理学习助手，专注于物理学家生平、科学贡献以及相关物理知识的解答。如果你有关于物理学家、物理理论、历史背景或任何与物理相关的问题，欢迎随时提问！我会尽力提供清晰、可靠的回答。😊",
+          "attachments": []
+        },
+        {
+          "role": "user",
+          "content": "小王子是谁",
+          "attachments": []
+        },
+        {
+          "role": "assistant",
+          "content": "🔍 **正在检索知识库...**\n\n根据提供的Context信息，小王子是一个来自其他宇宙的高维生物。",
+          "attachments": []
+        }
+      ]
+    }
+  ]
+}
