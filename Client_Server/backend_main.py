@@ -158,6 +158,7 @@ class FrontendChatRequest(BaseModel):
     mode: Optional[str] = "general"  # "general" 或 "course_graph"
     selected_tools: Optional[List[str]] = []
     file_ids: Optional[List[str]] = None #多文件
+    history: Optional[List[dict]] = []
 
 
 
@@ -460,7 +461,13 @@ async def chat_endpoint(request: FrontendChatRequest):
                
          
                 try:
-                    for piece in rag_engine.chat_stream(user_prompt, top_k=3, extra_context=extra_context):
+                    for piece in rag_engine.chat_stream(
+                        user_prompt, 
+                        history=request.history,
+                        top_k=3, 
+                        extra_context=extra_context
+                    ):
+                        
                         yield json.dumps({
                             "type": "markdown_chunk",
                             "content": piece,
@@ -502,7 +509,14 @@ async def chat_endpoint(request: FrontendChatRequest):
                 }
             ]
 
-            # ========= ✅ 注入附件内容到 system =========
+            # ✅循环注入历史记录
+            for msg in (request.history or []):
+                messages.append({
+                    "role": msg.get("role"),
+                    "content": msg.get("content")
+                })
+
+            # ✅ 注入附件内容到 system 
             if file_context:
                 messages.append({
                     "role": "system",
@@ -525,9 +539,7 @@ async def chat_endpoint(request: FrontendChatRequest):
                 )
 
                 async for chunk in stream:
-                    choice = chunk.choices[0]
-                    delta = choice.delta
-                    piece = delta.content or ""
+                    piece = chunk.choices[0].delta.content or ""
                     if not piece:
                         continue
 

@@ -9,7 +9,7 @@ import os
 from models import Message
 from api import BackendClient
 
-
+#文件上传总类
 ALLOWED_KB_EXTS = {'.pdf', '.txt', '.md', '.docx', '.csv', '.xlsx', '.xls', '.json'}
 ALLOWED_CHAT_EXTS = {'.pdf', '.txt', '.md', '.docx', '.xlsx'}   # 临时分析先做常见四种
 MAX_UPLOAD_BYTES = 30 * 1024 * 1024  # 30MB
@@ -34,11 +34,13 @@ class ChatSession:
     def __init__(self):
         # 当前正在显示的消息列表
         self.messages: List[Message] = []
+        self.session_file_ids = set()
         self.pending_attachments = []   # [{file_id, filename}]
         self.attachment_bar = None      # UI 容器引用
         # 从文件加载 
         self.chat_history: List[Dict] = []
         self.current_chat_id: Optional[str] = None
+
         # 1. 加载历史，并获取上次保存时选中的 ID
         saved_active_id = self._load_history_from_disk()
         
@@ -99,7 +101,8 @@ class ChatSession:
             serialized_history.append({
                 'id': session['id'],
                 'title': session['title'],
-                'messages': serialized_msgs
+                'messages': serialized_msgs,
+                'session_file_ids': list(getattr(session, 'session_file_ids', []))
             })
             
         # 2. 构造新的存储结构：包含 active_id 和 history
@@ -436,20 +439,27 @@ class ChatSession:
     # 历史记录管理
     def save_current_chat(self):
         """保存当前会话到 history 并写入磁盘"""
+        # 如果只有欢迎语或空消息，不执行保存
         if len(self.messages) <= 1:
             return
 
-        # 更新内存中的 history
+        # 预先将 set 转换为 list，以便 JSON 存储
+        current_files = list(self.session_file_ids)
         found = False
+
+        # 1. 尝试更新内存中已有的会话记录
         if self.current_chat_id:
             for session in self.chat_history:
                 if session['id'] == self.current_chat_id:
+                    # ✅ 修正建议：直接在匹配到 ID 的 if 内部完成赋值
                     session['messages'] = self.messages
+                    session['session_file_ids'] = current_files
                     found = True
-                    break
+                    break  # 找到后立即跳出循环，提高效率
 
+        # 2. 如果是新开启的会话（未在历史记录中找到），创建新记录
         if not found:
-            # 创建新会话记录
+            # 取第一条用户消息的前 18 个字作为侧边栏标题
             first_user_msg = self.messages[1].content
             title = (first_user_msg[:18] + '..') if len(first_user_msg) > 18 else first_user_msg
             
@@ -457,15 +467,17 @@ class ChatSession:
             new_session = {
                 'id': new_id,
                 'title': title,
-                'messages': self.messages
+                'messages': self.messages,
+                'session_file_ids': current_files  # 初始保存文件 ID 列表
             }
+            # 将新会话插入到列表最前方
             self.chat_history.insert(0, new_session)
             self.current_chat_id = new_id
         
-        # 刷新 UI
+        # 3. 同步刷新 UI 侧边栏显示
         self.refresh_history_ui()
         
-        # 立刻写入硬盘 
+        # 4. 调用持久化方法，将 self.chat_history 写入 local_history.json
         self._save_history_to_disk()
 
 
@@ -498,6 +510,9 @@ class ChatSession:
         # 3. 载入数据
         self.messages = target_session['messages']
         self.current_chat_id = chat_id
+        saved_ids = target_session.get('session_file_ids', [])
+        self.session_file_ids = set(saved_ids)
+
         self.stop_flag = False
         self.generating = False
         
@@ -594,7 +609,7 @@ class ChatSession:
         target_mode = self.current_mode
      
         # ✅ 多附件：传 file_ids 给后端（下面第3步会改后端）
-        file_ids = [a['file_id'] for a in attachments]
+        file_ids = list(self.session_file_ids)
         try:
             async for chunk in self.backend.stream_chat(prompt, file_ids, target_mode):
                 if self.stop_flag:
@@ -706,6 +721,8 @@ class ChatSession:
      
         # 加入“待发送附件”
         self.pending_attachments.append({'file_id': file_id, 'filename': display_name})
+        # 加入当前会话的文件记忆
+        self.session_file_ids.add(file_id)
         self.refresh_attachment_bar()
      
        

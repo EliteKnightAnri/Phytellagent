@@ -137,7 +137,8 @@ class BackendClient:
         prompt: str,
         file_ref: Optional[Union[str, List[str]]],
         mode: str,
-        tools: list = None
+        tools: list = None,
+        history: list = []
     ):
         # 统一成 ids list
         ids: List[str] = []
@@ -154,6 +155,7 @@ class BackendClient:
             "file_id": ids[0] if ids else None,
             # 真正的多文件字段
             "file_ids": ids if ids else None,
+            "history": history
         }
      
         try:

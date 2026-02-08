@@ -5,14 +5,21 @@
       "indexed": true,
       "store_id": "c9f36b49fa5e66a3",
       "created_at": "2026-01-21T11:49:14",
-      "updated_at": "2026-02-03T15:39:46"
+      "updated_at": "2026-02-08T20:01:31"
     },
     "2.txt": {
       "enabled": true,
       "indexed": true,
       "store_id": "6dd4548b6caa0537",
       "created_at": "2026-01-21T13:58:01",
-      "updated_at": "2026-02-03T15:39:18"
+      "updated_at": "2026-02-08T20:01:32"
+    },
+    "泡利.docx": {
+      "enabled": true,
+      "indexed": true,
+      "store_id": "e86195d060f8d531",
+      "created_at": "2026-02-08T21:14:37",
+      "updated_at": "2026-02-08T21:14:42"
     }
   }
 }

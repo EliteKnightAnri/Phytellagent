@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 from sentence_transformers import SentenceTransformer
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_openai import ChatOpenAI
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 from langchain_community.document_loaders import (
     PyPDFLoader,
     TextLoader,
@@ -385,7 +385,7 @@ class RAGSearch:
         merged.sort(key=lambda x: x.get("distance", 0.0), reverse=True)
         return merged[:top_k]
 
-    def chat_stream(self, query: str, top_k: int = 3, extra_context: str = ""):
+    def chat_stream(self, query: str, history: List[dict] = [], top_k: int = 3, extra_context: str = ""):
         if not self.enabled_stores:
             yield "【系统提示】当前没有启用任何知识库文件，请先在知识库管理里打开开关。"
             return
@@ -407,7 +407,19 @@ class RAGSearch:
                 f"Context:\n{context}"
             )
 
-        messages = [SystemMessage(content=system_prompt), HumanMessage(content=query)]
+        messages = [SystemMessage(content=system_prompt)]
+
+        for msg in history:
+            role = msg.get("role")
+            content = msg.get("content", "")
+            if role == "user":
+                messages.append(HumanMessage(content=content))
+            elif role == "assistant":
+                messages.append(AIMessage(content=content))
+
+
+        messages.append(HumanMessage(content=query))
+
         for chunk in self.llm.stream(messages):
             if chunk and getattr(chunk, "content", None):
                 yield chunk.content
