@@ -1,7 +1,5 @@
 from mysql.connector import connect, Error
-from fastapi import FastAPI, Request, HTTPException
-from typing import Dict, Any
-import uvicorn
+from fastmcp import FastMCP
 import json
 import os
 
@@ -32,8 +30,10 @@ DB_CONFIG = {
     'database': mysql_env.get('MYSQL_DATABASE', 'test_db')
 }
 
-app = FastAPI(title="MySQL tool", version="1.0")
+# 使用FastMCP创建服务器
+mcp = FastMCP(name="MySQL tool")
 
+@mcp.tool()
 def execute_query(query: str) -> dict:
     """
     Execute a SQL query on the MySQL database and return the results.
@@ -76,43 +76,5 @@ def execute_query(query: str) -> dict:
             cursor.close()
             connection.close()
 
-async def process_request(request: Request) -> Dict[str, Any]:
-    try:
-        body = await request.json()
-        # 打印调试信息
-        print(f"Request received: {body}")
-        
-        # 支持多种可能的字段名
-        method = body.get("method") or body.get("function") or body.get("action")
-        params = body.get("params") or body.get("arguments") or body.get("parameters") or {}
-        
-        query = params.get("query", "") or params.get("sql", "")
-        return {"method": method, "query": query}
-        
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Invalid request: {str(e)}")
-    
-@app.post("/query")
-async def mcp_call_endpoint(request: dict):
-    function_name = request.get("function")
-    params = request.get("params", {})
-    query = params.get("query", "") or params.get("sql", "")
-
-    print(f"Received SQL request - function: {function_name}, query: {query}")
-    
-    if not query:
-        return {"error": "SQL query is required"}
-    
-    try:
-        results = execute_query(query)
-        return {"results": results}
-    except Error as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    
 if __name__ == "__main__":
-    uvicorn.run(
-        app="service.tools.mysql_tool:app",
-        host="0.0.0.0",
-        port=8081,
-        reload=True
-    )
+    mcp.run(transport="stdio")

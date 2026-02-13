@@ -1,0 +1,411 @@
+调试1
+async def ai_agent(user_input: str) -> str:
+    print("AI Agent received input:", user_input)
+
+    # 这段是写给AI agent看的prompt
+    messages = [
+        {
+            "role": "system", 
+            "content": "你是一个AI agent，可以使用提供的工具来帮助用户完成任务。请根据用户的问题，自主决定是否需要调用工具，以及调用哪个工具。如果调用工具，请严格按照给定的函数格式进行调用。如果无法调用工具，请向用户返回错误信息来帮助用户完成调试。"         
+        },
+        {
+            "role": "user",
+            "content": user_input
+        }
+    ]
+
+    while True:
+        print("Sending messages to AI agent:", messages)
+        response = await agent.chat.completions.create(
+            model="deepseek-chat",
+            messages=messages,
+            tools=tools,
+            tool_choice="auto"
+        )
+        # 如果你希望AI agent不止调用一个工具，可以把下面这行注释掉
+        response_message = response.choices[0].message
+        if not response_message.tool_calls:
+            print("AI agent didn't call any function. Now responding to user...")
+            return response_message.content
+
+        # 扩展对话历史，方便AI agent参考上文
+        messages.append(response_message)
+        
+        # tool_calls是一个列表，tool_call是包含函数名和参数的字典元素
+        for tool_call in response_message.tool_calls:
+            function_name = tool_call.function.name
+            function_args = json.loads(tool_call.function.arguments)
+            tool_call_id = tool_call.id
+
+            # 打印调试信息
+            print(f"AI agent is calling tool: {function_name}")
+            print(f"With arguments and ID: {function_args}, {tool_call_id}")
+
+            tool_result = await call_tool(function_name, function_args)
+            print(tool_result)
+
+            # 将工具调用结果添加到对话历史
+            # 到这里开始报错TypeError: Object of type CallToolResult is not JSON serializable，记得查一下怎么回事
+            messages.append({
+                "role": "tool",
+                "tool_call_id": tool_call_id,
+                "name": function_name,
+                "content": json.dumps(tool_result, ensure_ascii=False)
+            })
+
+(local_mcp) E:\local_mcp>python client/client.py
+Please enter your query: 帮我查一下这台电脑的CPU核数
+AI Agent received input: 帮我查一下这台电脑的CPU核数
+Sending messages to AI agent: [{'role': 'system', 'content': '你是一个AI agent，可以使用提供的工具来帮助用户完成任务。请根据用户的问题，自主决定是否需要调用工具，以及调用哪个工具。如果调用工具，请严格按照给定的函数格式进行调用。如果无法调用工具，请向用户返回错误信息来帮助用户完成调试。'}, {'role': 'user', 'content': '帮我查一下这台电脑的CPU核数'}]
+AI agent is calling tool: get_system_info
+With arguments and ID: {'key': 'cpu_count'}, call_00_1wzO9px1VwHTFvQEtvcytoGp
+{'result': {'result': 16}}
+Sending messages to AI agent: [{'role': 'system', 'content': '你是一个AI agent，可以使用提供的工具来帮助用户完成任务。请根据用户的问题，自主决定是否需要调用工具，以及调用哪个工具。如果调用工具，请严格按照给定的函数格式进行调用。如果无法调用工具，请向用户返回错误信息来帮助用户完成调试。'}, {'role': 'user', 'content': '帮我查一下这台电脑的CPU核数'}, ChatCompletionMessage(content='我 来帮您查询这台电脑的CPU核数。我将使用系统信息工具来获取这个信息。', refusal=None, role='assistant', annotations=None, audio=None, function_call=None, tool_calls=[ChatCompletionMessageFunctionToolCall(id='call_00_1wzO9px1VwHTFvQEtvcytoGp', function=Function(arguments='{"key": "cpu_count"}', name='get_system_info'), type='function', index=0)]), {'role': 'tool', 'tool_call_id': 'call_00_1wzO9px1VwHTFvQEtvcytoGp', 'name': 'get_system_info', 'content': '{"result": {"result": 16}}'}]
+AI agent didn't call any function. Now responding to user...
+AI Agent response: 根据查询结果，这台电脑的CPU核数是 **16核**。
+
+
+调试2
+async def ai_agent(user_input: str) -> str:
+    print("AI Agent received input:", user_input)
+
+    # 这段是写给AI agent看的prompt
+    messages = [
+        {
+            "role": "system", 
+            "content": "你是一个AI agent，可以使用提供的工具来帮助用户完成任务。请根据用户的问题，自主决定是否需要调用工具，以及调用哪个工具。如果调用工具，请严格按照给定的函数格式进行调用。如果无法调用工具，请向用户返回错误信息来帮助用户完成调试。"         
+        },
+        {
+            "role": "user",
+            "content": user_input
+        }
+    ]
+
+    while True:
+        print("Sending messages to AI agent:", messages)
+        response = await agent.chat.completions.create(
+            model="deepseek-chat",
+            messages=messages,
+            tools=tools,
+            tool_choice="auto"
+        )
+        # 如果你希望AI agent不止调用一个工具，可以把下面这行注释掉
+        response_message = response.choices[0].message
+        if not response_message.tool_calls:
+            print("AI agent didn't call any function. Now responding to user...")
+            return response_message.content
+
+        # 扩展对话历史，方便AI agent参考上文
+        messages.append(response_message)
+        
+        # tool_calls是一个列表，tool_call是包含函数名和参数的字典元素
+        for tool_call in response_message.tool_calls:
+            function_name = tool_call.function.name
+            function_args = json.loads(tool_call.function.arguments)
+            tool_call_id = tool_call.id
+
+            # 打印调试信息
+            print(f"AI agent is calling tool: {function_name}")
+            print(f"With arguments and ID: {function_args}, {tool_call_id}")
+
+            tool_result = await call_tool(function_name, function_args)
+            print(tool_result)
+
+            # 将工具调用结果添加到对话历史
+            # 到这里开始报错TypeError: Object of type CallToolResult is not JSON serializable，记得查一下怎么回事
+            messages.append({
+                "role": "tool",
+                "tool_call_id": tool_call_id,
+                "name": function_name,
+                "content": json.dumps(tool_result, ensure_ascii=False)
+            })
+
+        if isinstance(tool_result, str):
+            return tool_result
+        return json.dumps(tool_result, ensure_ascii=False)           
+
+(local_mcp) E:\local_mcp>python client/client.py
+Please enter your query: 帮我查这台电脑的CPU核数
+AI Agent received input: 帮我查这台电脑的CPU核数
+Sending messages to AI agent: [{'role': 'system', 'content': '你是一个AI agent，可以使用提供的工具来帮助用户完成任务。请根据用户的问题，自主决定是否需要调用工具，以及调用哪个工具。如果调用工具，请严格按照给定的函数格式进行调用。如果无法调用工具，请向用户返回错误信息来帮助用户完成调试。'}, {'role': 'user', 'content': '帮我查这台电脑的CPU核数'}]
+AI agent is calling tool: get_system_info
+With arguments and ID: {'key': 'cpu_count'}, call_00_rGN3tsRPdMPiGFtFaJQ7GpjP
+{'result': {'result': 16}}
+AI Agent response: {"result": {"result": 16}}
+
+
+调试3
+用聚合器（client = Client("E:/local_mcp/service/service.py")）
+(local_mcp) E:\local_mcp>python client/client.py
+Please enter your query: 帮我查一下这台电脑的CPU核数
+AI Agent received input: 帮我查一下这台电脑的CPU核数
+Sending messages to AI agent: [{'role': 'system', 'content': '你是一个AI agent，可以使用提供的工具来帮助用户完成任务。请根据用户的问题，自主决定是否需要调用工具，以及调用哪个工具。如果调用工具，请严格按照给定的函数格式进行调用。如果无法调用工具，请向用户返回错误信息来帮助用户完成调试。'}, {'role': 'user', 'content': '帮我查一下这台电脑的CPU核数'}]
+AI agent is calling tool: get_system_info
+With arguments and ID: {'key': 'cpu_count'}, call_00_7wJr5M9J8DWPLDYTrr9zOhUC
+{'result': {'result': 16}}
+AI Agent response: 根据查询结果，这台电脑的CPU核数是 **16核**。
+Please enter your query: 帮我查询一下video_games这张表的第二条是什么
+AI Agent received input: 帮我查询一下video_games这张表的第二条是什么
+Sending messages to AI agent: [{'role': 'system', 'content': '你是一个AI agent，可以使用提供的工具来帮助用户完成任务。请根据用户的问题，自主决定是否需要调用工具，以及调用哪个工具。如果调用工具，请严格按照给定的函数格式进行调用。如果无法调用工具，请向用户返回错误信息来帮助用户完成调试。'}, {'role': 'user', 'content': '帮我查询一下video_games这张表的第二条是什么'}]
+AI agent is calling tool: execute_query
+With arguments and ID: {'sql': 'SELECT * FROM video_games LIMIT 2 OFFSET 1'}, call_00_NsPd7zGMbIa7FJiO91Cl0Tlx
+Traceback (most recent call last):
+  File "E:\local_mcp\.venv\Lib\site-packages\fastmcp\client\client.py", line 433, in _context_manager
+    await self.initialize()
+  File "E:\local_mcp\.venv\Lib\site-packages\fastmcp\client\client.py", line 490, in initialize
+    self._session_state.initialize_result = await self.session.initialize()
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\local_mcp\.venv\Lib\site-packages\mcp\client\session.py", line 171, in initialize
+    result = await self.send_request(
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\local_mcp\.venv\Lib\site-packages\mcp\shared\session.py", line 281, in send_request
+    await self._write_stream.send(SessionMessage(message=JSONRPCMessage(jsonrpc_request), metadata=metadata))
+  File "E:\local_mcp\.venv\Lib\site-packages\anyio\streams\memory.py", line 243, in send
+    self.send_nowait(item)
+  File "E:\local_mcp\.venv\Lib\site-packages\anyio\streams\memory.py", line 212, in send_nowait
+    raise ClosedResourceError
+anyio.ClosedResourceError
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "E:\local_mcp\.venv\Lib\site-packages\fastmcp\client\client.py", line 649, in _session_runner
+    await stack.enter_async_context(self._context_manager())
+  File "C:\Users\Anri\AppData\Local\Programs\Python\Python311\Lib\contextlib.py", line 638, in enter_async_context
+    result = await _enter(cm)
+             ^^^^^^^^^^^^^^^^
+  File "C:\Users\Anri\AppData\Local\Programs\Python\Python311\Lib\contextlib.py", line 204, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "E:\local_mcp\.venv\Lib\site-packages\exceptiongroup\_catch.py", line 65, in handle_exception
+    result = handler(matched)
+             ^^^^^^^^^^^^^^^^
+  File "E:\local_mcp\.venv\Lib\site-packages\fastmcp\utilities\exceptions.py", line 29, in _exception_handler
+    raise leaf
+  File "E:\local_mcp\.venv\Lib\site-packages\fastmcp\client\client.py", line 436, in _context_manager
+    raise RuntimeError("Server session was closed unexpectedly") from e
+RuntimeError: Server session was closed unexpectedly
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "E:\local_mcp\client\client.py", line 192, in <module>
+    response = asyncio.run(ai_agent(user_input))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Anri\AppData\Local\Programs\Python\Python311\Lib\asyncio\runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\Anri\AppData\Local\Programs\Python\Python311\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Anri\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 653, in run_until_complete      
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "E:\local_mcp\client\client.py", line 163, in ai_agent
+    tool_result = await call_tool(function_name, function_args)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\local_mcp\client\client.py", line 102, in call_tool
+    async with client:
+  File "E:\local_mcp\.venv\Lib\site-packages\fastmcp\client\client.py", line 496, in __aenter__
+    return await self._connect()
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "E:\local_mcp\.venv\Lib\site-packages\fastmcp\client\client.py", line 587, in _connect
+    raise RuntimeError(
+RuntimeError: Client failed to connect: Server session was closed unexpectedly
+
+直接写死路径（client = Client("E:/local_mcp/service/tools/system_info_tool.py")）
+(local_mcp) E:\local_mcp>python client/client.py
+Please enter your query: 帮我查一下这台电脑的CPU核数
+AI Agent received input: 帮我查一下这台电脑的CPU核数
+Sending messages to AI agent: [{'role': 'system', 'content': '你是一个AI agent，可以使用提供的工具来帮助用户完成任务。请根据用户的问题，自主决定是否需要调用工具，以及调用哪个工具。如果调用工具，请严格按照给定的函数格式进行调用。如果无法调用工具，请向用户返回错误信息来帮助用户完成调试。'}, {'role': 'user', 'content': '帮我查一下这台电脑的CPU核数'}]
+AI agent is calling tool: get_system_info
+With arguments and ID: {'key': 'cpu_count'}, call_00_hisdsfLwc5HBzYQzepYHzzJX
+{'result': {'result': 16}}
+AI Agent response: 根据查询结果，这台电脑的CPU核数是 **16核**。
+Please enter your query: 帮我查一下这台电脑的Python版本
+AI Agent received input: 帮我查一下这台电脑的Python版本
+Sending messages to AI agent: [{'role': 'system', 'content': '你是一个AI agent，可以使用提供的工具来帮助用户完成任务。请根据用户的问题，自主决定是否需要调用工具，以及调用哪个工具。如果调用工具，请严格按照给定的函数格式进行调用。如果无法调用工具，请向用户返回错误信息来帮助用户完成调试。'}, {'role': 'user', 'content': '帮我查一下这台电脑的Python版本'}]
+AI agent is calling tool: get_system_info
+With arguments and ID: {'key': 'python_version'}, call_00_QgL5HWAT5duxsHCbICUzjca4
+Traceback (most recent call last):
+  File "E:\local_mcp\.venv\Lib\site-packages\fastmcp\client\client.py", line 433, in _context_manager
+    await self.initialize()
+  File "E:\local_mcp\.venv\Lib\site-packages\fastmcp\client\client.py", line 490, in initialize
+    self._session_state.initialize_result = await self.session.initialize()
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\local_mcp\.venv\Lib\site-packages\mcp\client\session.py", line 171, in initialize
+    result = await self.send_request(
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\local_mcp\.venv\Lib\site-packages\mcp\shared\session.py", line 281, in send_request
+    await self._write_stream.send(SessionMessage(message=JSONRPCMessage(jsonrpc_request), metadata=metadata))
+  File "E:\local_mcp\.venv\Lib\site-packages\anyio\streams\memory.py", line 243, in send
+    self.send_nowait(item)
+  File "E:\local_mcp\.venv\Lib\site-packages\anyio\streams\memory.py", line 212, in send_nowait
+    raise ClosedResourceError
+anyio.ClosedResourceError
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "E:\local_mcp\.venv\Lib\site-packages\fastmcp\client\client.py", line 649, in _session_runner
+    await stack.enter_async_context(self._context_manager())
+  File "C:\Users\Anri\AppData\Local\Programs\Python\Python311\Lib\contextlib.py", line 638, in enter_async_context
+    result = await _enter(cm)
+             ^^^^^^^^^^^^^^^^
+  File "C:\Users\Anri\AppData\Local\Programs\Python\Python311\Lib\contextlib.py", line 204, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "E:\local_mcp\.venv\Lib\site-packages\exceptiongroup\_catch.py", line 65, in handle_exception
+    result = handler(matched)
+             ^^^^^^^^^^^^^^^^
+  File "E:\local_mcp\.venv\Lib\site-packages\fastmcp\utilities\exceptions.py", line 29, in _exception_handler
+    raise leaf
+  File "E:\local_mcp\.venv\Lib\site-packages\fastmcp\client\client.py", line 436, in _context_manager
+    raise RuntimeError("Server session was closed unexpectedly") from e
+RuntimeError: Server session was closed unexpectedly
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "E:\local_mcp\client\client.py", line 195, in <module>
+    response = asyncio.run(ai_agent(user_input))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Anri\AppData\Local\Programs\Python\Python311\Lib\asyncio\runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\Anri\AppData\Local\Programs\Python\Python311\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Anri\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 653, in run_until_complete      
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "E:\local_mcp\client\client.py", line 163, in ai_agent
+    tool_result = await call_tool(function_name, function_args)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\local_mcp\client\client.py", line 102, in call_tool
+    async with client:
+  File "E:\local_mcp\.venv\Lib\site-packages\fastmcp\client\client.py", line 496, in __aenter__
+    return await self._connect()
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "E:\local_mcp\.venv\Lib\site-packages\fastmcp\client\client.py", line 587, in _connect
+    raise RuntimeError(
+RuntimeError: Client failed to connect: Server session was closed unexpectedly
+
+
+调试4
+Please enter your query: 帮我查一查video_games这张表的第一条是什么游戏，然后搜索这个游戏的热门视频
+AI Agent received input: 帮我查一查video_games这张表的第一条是什么游戏，然后搜索这个游戏的热门视频
+Sending messages to AI agent: [{'role': 'system', 'content': '你是一个AI agent，可以使用提供的工具来帮助用户完成任务。请根据用户的问题，自主决定是否需要调用工具，以及调用哪个工具。如果调用工具，请严格按照给定的函数格式进行调用。如果无法调用工具，请向用户返回错误信息来帮助用户完成调试。'}, {'role': 'user', 'content': '帮我查一查video_games这张表的第一条是什么游戏，然后搜索这个游戏的热门视频'}]
+AI agent is calling tool: execute_query
+With arguments and ID: {'sql': 'SELECT * FROM video_games LIMIT 1'}, call_00_iLnGtkgnnLJFJmU1eDRaS9oB
+{'columns': ['id', 'title', 'release_year', 'developer', 'platform', 'genre'], 'results': [{'id': 1, 'title': 'Grand Theft Auto V', 'release_year': 2013, 'developer': 'Rockstar North', 'platform': 'Multi-platform', 'genre': 'Action-adventure'}]}
+Sending messages to AI agent: [{'role': 'system', 'content': '你是一个AI agent，可以使用提供的工具来帮助用户完成任务。请根据用户的问题，自主决定是否需要调用工具，以及调用哪个工具。如果调用工具，请严格按照给定的函数格式进行调用。如果无法调用工具，请向用户返回错误信息来帮助用户完成调试。'}, {'role': 'user', 'content': '帮我查一查video_games这张表的第一条是什么游戏，然后搜索这个游戏的热门视频'}, ChatCompletionMessage(content='我来帮您完成这个任务。首先，我需要查询video_games表的第一条记录，然后搜索该游戏的热门视频。\n\n让我先查询数据库：', refusal=None, role='assistant', annotations=None, audio=None, function_call=None, tool_calls=[ChatCompletionMessageFunctionToolCall(id='call_00_iLnGtkgnnLJFJmU1eDRaS9oB', function=Function(arguments='{"sql": "SELECT * FROM video_games LIMIT 1"}', name='execute_query'), type='function', index=0)]), {'role': 'tool', 'tool_call_id': 'call_00_iLnGtkgnnLJFJmU1eDRaS9oB', 'name': 'execute_query', 'content': '{"columns": ["id", "title", "release_year", "developer", "platform", "genre"], "results": [{"id": 1, "title": "Grand Theft Auto V", "release_year": 2013, "developer": "Rockstar North", "platform": "Multi-platform", "genre": "Action-adventure"}]}'}, ChatCompletionMessage(content='很好！我找到了video_games表的第一条记录，游戏是"Grand Theft Auto V"（侠盗猎车手5）。现在让我在哔哩哔哩上搜索这个游戏的热门视频：', refusal=None, role='assistant', annotations=None, audio=None, function_call=None, tool_calls=[ChatCompletionMessageFunctionToolCall(id='call_00_rLdgoa2iTovhy1l51afre1az', function=Function(arguments='{"keyword": "Grand Theft Auto V 侠盗猎车手5"}', name='search_videos'), type='function', index=0)])]      
+Traceback (most recent call last):
+  File "E:\local_mcp\client\client.py", line 198, in <module>
+    asyncio.run(main())
+  File "C:\Users\Anri\AppData\Local\Programs\Python\Python311\Lib\asyncio\runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\Anri\AppData\Local\Programs\Python\Python311\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Anri\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 653, in run_until_complete      
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "E:\local_mcp\client\client.py", line 193, in main
+    response = await ai_agent(client, user_input)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\local_mcp\client\client.py", line 135, in ai_agent
+    response = await agent.chat.completions.create(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\local_mcp\.venv\Lib\site-packages\openai\resources\chat\completions\completions.py", line 2672, in create
+    return await self._post(
+           ^^^^^^^^^^^^^^^^^
+  File "E:\local_mcp\.venv\Lib\site-packages\openai\_base_client.py", line 1794, in post
+    return await self.request(cast_to, opts, stream=stream, stream_cls=stream_cls)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\local_mcp\.venv\Lib\site-packages\openai\_base_client.py", line 1594, in request
+    raise self._make_status_error_from_response(err.response) from None
+openai.BadRequestError: Error code: 400 - {'error': {'message': "An assistant message with 'tool_calls' must be followed by tool messages responding to each 'tool_call_id'. (insufficient tool messages following tool_calls message)", 'type': 'invalid_request_error', 'param': None, 'code': 'invalid_request_error'}}
+
+
+调试5
+(local_mcp) E:\local_mcp>python client/client.py
+Please enter your query: 我在E:/local_mcp/data.txt中放了一些参数，它们的表头分别是x和y，分隔符为空格（也就是" "）。这些参数遵循这样一个公式：ax=y。请帮我拟合这个公式中的所有参数（a），然后用原始数据绘制一个笛卡尔坐标系中的二维图，保存到E:/local_mcp/2d_plot.png。
+AI Agent received input: 我在E:/local_mcp/data.txt中放了一些参数，它们的表头分别是x和y，分隔符为空格（也就是" "）。这些参数遵循这样一个公式：ax=y。请帮我拟合这个公式中的所有参数（a），然后用原始数据绘制一个笛卡尔坐标系中的二维图，保存到E:/local_mcp/2d_plot.png。
+Sending messages to AI agent: [{'role': 'system', 'content': '你是一个AI agent，可以使用提供的工具来帮助用户完成任务。请根据用户 的问题，自主决定是否需要调用工具，以及调用哪个工具。如果调用工具，请严格按照给定的函数格式进行调用。如果无法调用工具，请向用户返 回错误信息来帮助用户完成调试。'}, {'role': 'user', 'content': '我在E:/local_mcp/data.txt中放了一些参数，它们的表头分别是x和y，分 隔符为空格（也就是" "）。这些参数遵循这样一个公式：ax=y。请帮我拟合这个公式中的所有参数（a），然后用原始数据绘制一个笛卡尔坐标系 中的二维图，保存到E:/local_mcp/2d_plot.png。'}]
+AI agent is calling tool: import_csv
+With arguments and ID: {'file_path': 'E:/local_mcp/data.txt', 'sep': ' '}, call_00_C38TkLu8Hh9VJpmr3CL6UvU0
+{'columns': ['x', 'y'], 'records': [{'x': 1, 'y': 1}, {'x': 2, 'y': 2}, {'x': 3, 'y': 3}, {'x': -1, 'y': -1}, {'x': 4, 'y': 4}, {'x': 5, 'y': 5}, {'x': -10, 'y': -10}, {'x': 11, 'y': 11}, {'x': 100, 'y': 100}]}
+AI agent is calling tool: execute_query
+With arguments and ID: {'sql': 'SELECT x, y FROM data'}, call_00_Htrdowa5LNr209IpRnevkqNw
+{'error': "1146 (42S02): Table 'itheima.data' doesn't exist"}
+Sending messages to AI agent: [{'role': 'system', 'content': '你是一个AI agent，可以使用提供的工具来帮助用户完成任务。请根据用户 的问题，自主决定是否需要调用工具，以及调用哪个工具。如果调用工具，请严格按照给定的函数格式进行调用。如果无法调用工具，请向用户返 回错误信息来帮助用户完成调试。'}, {'role': 'user', 'content': '我在E:/local_mcp/data.txt中放了一些参数，它们的表头分别是x和y，分 隔符为空格（也就是" "）。这些参数遵循这样一个公式：ax=y。请帮我拟合这个公式中的所有参数（a），然后用原始数据绘制一个笛卡尔坐标系 中的二维图，保存到E:/local_mcp/2d_plot.png。'}, ChatCompletionMessage(content='我来帮您完成这个任务。首先，我需要导入数据文件，然后进行拟合，最后绘制图表。\n\n让我按步骤进行：\n\n1. 首先导入CSV文件', refusal=None, role='assistant', annotations=None, audio=None, function_call=None, tool_calls=[ChatCompletionMessageFunctionToolCall(id='call_00_C38TkLu8Hh9VJpmr3CL6UvU0', function=Function(arguments='{"file_path": "E:/local_mcp/data.txt", "sep": " "}', name='import_csv'), type='function', index=0)]), {'role': 'tool', 'tool_call_id': 'call_00_C38TkLu8Hh9VJpmr3CL6UvU0', 'name': 'import_csv', 'content': '{"columns": ["x", "y"], "records": [{"x": 1, "y": 1}, {"x": 2, "y": 2}, {"x": 3, "y": 3}, {"x": -1, "y": -1}, {"x": 4, "y": 4}, {"x": 5, "y": 5}, {"x": -10, "y": -10}, {"x": 11, "y": 11}, {"x": 100, "y": 100}]}'}, ChatCompletionMessage(content='很好！数据已经成功导入。我看到数据有x和y两列，看起来 是线性关系y = x。现在我需要提取x和y数据，然后进行最小二乘拟合。\n\n2. 提取数据并准备进行拟合\n\n从导入的数据中，我需要提取x_data 和y_data数组：', refusal=None, role='assistant', annotations=None, audio=None, function_call=None, tool_calls=[ChatCompletionMessageFunctionToolCall(id='call_00_Htrdowa5LNr209IpRnevkqNw', function=Function(arguments='{"sql": "SELECT x, y FROM data"}', name='execute_query'), type='function', index=0)]), {'role': 'tool', 'tool_call_id': 'call_00_Htrdowa5LNr209IpRnevkqNw', 'name': 'execute_query', 'content': '{"error": "1146 (42S02): Table \'itheima.data\' doesn\'t exist"}'}]
+AI agent is calling tool: least_square_fit_2d
+With arguments and ID: {'x_data': [1, 2, 3, -1, 4, 5, -10, 11, 100], 'y_data': [1, 2, 3, -1, 4, 5, -10, 11, 100], 'model_func_str': 'a*x', 'initial_params': [1.0]}, call_00_IRROFzdaOjoHPJQDtUGLOgWm
+Traceback (most recent call last):
+  File "E:\local_mcp\client\client.py", line 418, in <module>
+    asyncio.run(main())
+  File "C:\Users\Anri\AppData\Local\Programs\Python\Python311\Lib\asyncio\runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\Anri\AppData\Local\Programs\Python\Python311\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Anri\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 653, in run_until_complete       
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "E:\local_mcp\client\client.py", line 413, in main
+    response = await ai_agent(client, user_input)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\local_mcp\client\client.py", line 361, in ai_agent
+    tool_result = await call_tool(client, function_name, function_args)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\local_mcp\client\client.py", line 307, in call_tool
+    result = await client.call_tool(function_name, function_args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\local_mcp\.venv\Lib\site-packages\fastmcp\client\client.py", line 1430, in call_tool
+    return await self._parse_call_tool_result(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\local_mcp\.venv\Lib\site-packages\fastmcp\client\client.py", line 1317, in _parse_call_tool_result
+    raise ToolError(msg)
+fastmcp.exceptions.ToolError: Error calling tool 'least_square_fit_2d': _lambdifygenerated() takes 1 positional argument but 2 were given
+
+
+调试6
+(local_mcp) E:\local_mcp>python client/client.py 
+Please enter your query: 我在E:/local_mcp/film_thickness_data.txt中放了一些参数，它们的表头分别是x，y和z，遵循公式：z = h0 + A * np.exp(-((x - x0)**2 + (y - y0)**2) / (2 * omega**2)) + alpha * x + beta * y，分隔符为空格（也就是" "）。请帮我拟合这个公式中的所有参数（h0, A, x0, y0, omega, alpha和beta，初始值为1e-6, 1e-5, 1, 1, 1, 1e-6, 1e-6），然后用原始数据绘制一个笛卡尔坐标系中的三维 图，保存到E:/local_mcp/3d_plot.png。
+AI Agent received input: 我在E:/local_mcp/film_thickness_data.txt中放了一些参数，它们的表头分别是x，y和z，遵循公式：z = h0 + A * np.exp(-((x - x0)**2 + (y - y0)**2) / (2 * omega**2)) + alpha * x + beta * y，分隔符为空格（也就是" "）。请帮我拟合这个公式中的所有参数（h0, A, x0, y0, omega, alpha和beta，初始值为1e-6, 1e-5, 1, 1, 1, 1e-6, 1e-6），然后用原始数据绘制一个笛卡尔坐标系中的三维 图，保存到E:/local_mcp/3d_plot.png。
+Sending messages to AI agent: [{'role': 'system', 'content': '你是一个AI agent，可以使用提供的工具来帮助用户完成任务。请根据用户 的问题，自主决定是否需要调用工具，以及调用哪个工具。如果调用工具，请严格按照给定的函数格式进行调用。如果无法调用工具，请向用户返 回错误信息来帮助用户完成调试。'}, {'role': 'user', 'content': '我在E:/local_mcp/film_thickness_data.txt中放了一些参数，它们的表头分别是x，y和z，遵循公式：z = h0 + A * np.exp(-((x - x0)**2 + (y - y0)**2) / (2 * omega**2)) + alpha * x + beta * y，分隔符为空格 （也就是" "）。请帮我拟合这个公式中的所有参数（h0, A, x0, y0, omega, alpha和beta，初始值为1e-6, 1e-5, 1, 1, 1, 1e-6, 1e-6），然后用原始数据绘制一个笛卡尔坐标系中的三维图，保存到E:/local_mcp/3d_plot.png。'}]
+AI agent is calling tool: import_csv
+With arguments and ID: {'file_path': 'E:/local_mcp/film_thickness_data.txt', 'sep': ' ', 'header': 0}, call_00_GJrM1TCN7k7PiZxVxM4KBPwj
+{'x': [-1.254599, 4.507143, 2.319939, 0.986585, -3.439814, -3.440055, -4.419164, 3.661761, 1.01115, 2.080726, -4.794155, 4.699099, 3.324426, -2.876609, -3.18175, -3.165955, -1.957578, 0.247564, -0.68055, -2.087709], 'y': [-3.968761, 4.025529, 0.052524, 3.264575, -1.799504, 3.955232, -1.107983, -4.891623, 4.05382, -4.087133, -1.806864, 4.50062, 4.506071, 0.734379, 1.318372, -0.515545, -2.067892, -1.713355, 1.725185, 2.523745], 'z': [115.348649, 102.513354, 139.436912, 117.791764, 117.379037, 98.162623, 105.307059, 109.041653, 107.785627, 118.459585, 101.332668, 103.374893, 101.349486, 118.644806, 111.572112, 115.644166, 129.153358, 144.248859, 129.547786, 111.729269]}
+AI agent is calling tool: least_square_fit_3d
+With arguments and ID: {'x_data': [-1.254599, 4.507143, 2.319939, 0.986585, -3.439814, -3.440055, -4.419164, 3.661761, 1.01115, 2.080726, -4.794155, 4.699099, 3.324426, -2.876609, -3.18175, -3.165955, -1.957578, 0.247564, -0.68055, -2.087709], 'y_data': [-3.968761, 4.025529, 0.052524, 3.264575, -1.799504, 3.955232, -1.107983, -4.891623, 4.05382, -4.087133, -1.806864, 4.50062, 4.506071, 0.734379, 1.318372, -0.515545, -2.067892, -1.713355, 1.725185, 2.523745], 'z_data': [115.348649, 102.513354, 139.436912, 117.791764, 117.379037, 98.162623, 105.307059, 109.041653, 107.785627, 118.459585, 101.332668, 103.374893, 101.349486, 118.644806, 111.572112, 115.644166, 129.153358, 144.248859, 129.547786, 111.729269], 'model_func_str': 'h0 + A * np.exp(-((x - x0)**2 + (y - y0)**2) / (2 * omega**2)) + alpha * x + beta * y', 'initial_params': [1e-06, 1e-05, 1, 1, 1, 1e-06, 1e-06]}, call_00_SBEOCAAVFxlKcbk9XbopugA2
+Traceback (most recent call last):
+  File "E:\local_mcp\client\client.py", line 418, in <module>
+    asyncio.run(main())
+  File "C:\Users\Anri\AppData\Local\Programs\Python\Python311\Lib\asyncio\runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\Anri\AppData\Local\Programs\Python\Python311\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Anri\AppData\Local\Programs\Python\Python311\Lib\asyncio\base_events.py", line 653, in run_until_complete       
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "E:\local_mcp\client\client.py", line 413, in main
+    response = await ai_agent(client, user_input)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\local_mcp\client\client.py", line 394, in ai_agent
+    tool_result = await call_tool(client, function_name, function_args)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\local_mcp\client\client.py", line 307, in call_tool
+    result = await client.call_tool(function_name, function_args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\local_mcp\.venv\Lib\site-packages\fastmcp\client\client.py", line 1430, in call_tool
+    return await self._parse_call_tool_result(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\local_mcp\.venv\Lib\site-packages\fastmcp\client\client.py", line 1317, in _parse_call_tool_result
+    raise ToolError(msg)
+fastmcp.exceptions.ToolError: Error calling tool 'least_square_fit_3d': unsupported operand type(s) for *: 'FunctionClass' and 'Symbol'
