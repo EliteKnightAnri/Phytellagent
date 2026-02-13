@@ -269,5 +269,40 @@ def least_square_fit_3d(x_data: list, y_data: list, z_data: list, model_func_str
         "param_names": getattr(model_func, 'param_names', None)
     }
 
+@mcp.tool()
+def generate_pred_values_2d(x_data: list, model_func_str: str, params: list) -> Dict[str, Any]:
+    """
+    Generate predicted y values from the fitted model function and optimized parameters.
+
+    Args:
+        x_data (list): The independent variable data points.
+        model_func_str (str): The string representation of the model function.
+        params (list): The optimized parameters obtained from fitting.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the predicted y values.
+    """
+    model_func = str_to_function_2d(model_func_str)
+    predicted_y = model_func(params, np.array(x_data))
+    return {"predicted_y": _safe_opt_to_list(predicted_y)}
+
+@mcp.tool()
+def generate_pred_values_3d(x_data: list, y_data: list, model_func_str: str, params: list) -> Dict[str, Any]:
+    """
+    Generate predicted z values from the fitted model function and optimized parameters.
+
+    Args:
+        x_data (list): The independent variable data points for x-axis.
+        y_data (list): The independent variable data points for y-axis.
+        model_func_str (str): The string representation of the model function.
+        params (list): The optimized parameters obtained from fitting.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the predicted z values.
+    """
+    model_func = str_to_function_3d(model_func_str, var_name="x,y")
+    predicted_z = model_func(params, np.array(x_data), np.array(y_data))
+    return {"predicted_z": _safe_opt_to_list(predicted_z)}
+
 if __name__ == "__main__":
     mcp.run(transport="stdio")

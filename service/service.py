@@ -146,6 +146,23 @@ async def least_square_fit_3d(x_data: list, y_data: list, z_data: list, model_fu
 	})
 
 @mcp.tool()
+async def generate_pred_values_2d(x_data: list, model_func_str: str, params: list) -> Any:
+	return await manager.call_tool("least_square", "generate_pred_values_2d", {
+		"x_data": x_data,
+		"model_func_str": model_func_str,
+		"params": params,
+	})
+
+@mcp.tool()
+async def generate_pred_values_3d(x_data: list, y_data: list, model_func_str: str, params: list) -> Any:
+	return await manager.call_tool("least_square", "generate_pred_values_3d", {
+		"x_data": x_data,
+		"y_data": y_data,		
+		"model_func_str": model_func_str,
+		"params": params,
+	})
+
+@mcp.tool()
 async def plot_in_2d(x_data: list, y_data: list, title: str = "2D Figure", x_label: str = "X-Axis", y_label: str = "Y-Axis", file_path: str = "2d_figure.png") -> Dict[str, Any]:
 	return await manager.call_tool("matplotlib", "plot_in_2d", {
 		"x_data": x_data,
@@ -162,6 +179,35 @@ async def plot_in_3d(x_data: list, y_data: list, z_data: list, title: str = "3D 
 		"x_data": x_data,
 		"y_data": y_data,
 		"z_data": z_data,
+		"title": title,
+		"x_label": x_label,
+		"y_label": y_label,
+		"z_label": z_label,
+		"file_path": file_path
+	})
+
+@mcp.tool()
+async def double_plot_2d(x1_data: list, y1_data: list, x2_data: list, y2_data: list, title: str = "Double 2D Figure", x_label: str = "X-Axis", y_label: str = "Y-Axis", file_path: str = "double_2d_figure.png") -> Dict[str, Any]:
+	return await manager.call_tool("matplotlib", "double_plot_2d", {
+		"x1_data": x1_data,
+		"y1_data": y1_data,
+		"x2_data": x2_data,
+		"y2_data": y2_data,
+		"title": title,
+		"x_label": x_label,
+		"y_label": y_label,
+		"file_path": file_path
+	})
+
+@mcp.tool()
+async def double_plot_3d(x1_data: list, y1_data: list, z1_data: list, x2_data: list, y2_data: list, z2_data: list, title: str = "Double 3D Figure", x_label: str = "X-Axis", y_label: str = "Y-Axis", z_label: str = "Z-Axis", file_path: str = "double_3d_figure.png") -> Dict[str, Any]:
+	return await manager.call_tool("matplotlib", "double_plot_3d", {
+		"x1_data": x1_data,
+		"y1_data": y1_data,
+		"z1_data": z1_data,
+		"x2_data": x2_data,
+		"y2_data": y2_data,
+		"z2_data": z2_data,
 		"title": title,
 		"x_label": x_label,
 		"y_label": y_label,

@@ -1,6 +1,6 @@
 import json
 import asyncio
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 # 这个库调试连接的时候可以用到
 import subprocess
 from openai import AsyncOpenAI
@@ -210,6 +210,65 @@ tools = [
     {
         "type": "function",
         "function": {
+            "name": "generate_pred_values_2d",
+            "description": "使用拟合得到的模型函数和参数，生成对应的预测值列表。对于用户输入的表达式，请转化为遵循Python语法的字符串，如用户输入'ax^2+bx+c'时，转化为'a*x**2+b*x+c'。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "x_data": {
+                        "type": "array",
+                        "items": {"type": "number"},
+                        "description": "用于生成预测值的自变量x数据列表。"
+                    },                    
+                    "model_func_str": {
+                        "type": "string",
+                        "description": "模型函数的字符串表示，遵循Python语法。"
+                    },
+                    "params": {
+                        "type": "array",
+                        "items": {"type": "number"},
+                        "description": "模型函数的参数列表。"
+                    }
+                },
+                "required": ["model_func_str", "params", "x_data"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "generate_pred_values_3d",
+            "description": "使用拟合得到的模型函数和参数，生成对应的预测值列表。对于用户输入的表达式，请转化为遵循Python语法的字符串，如用户输入'ax^2+by^2+cx+dy+e'时，转化为'a*x**2+b*y**2+c*x+d*y+e'。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "x_data": {
+                        "type": "array",
+                        "items": {"type": "number"},
+                        "description": "用于生成预测值的自变量x数据列表。"
+                    },
+                    "y_data": {
+                        "type": "array",
+                        "items": {"type": "number"},
+                        "description": "用于生成预测值的自变量y数据列表。"
+                    },                    
+                    "model_func_str": {
+                        "type": "string",
+                        "description": "模型函数的字符串表示，遵循Python语法。"
+                    },
+                    "params": {
+                        "type": "array",
+                        "items": {"type": "number"},
+                        "description": "模型函数的参数列表。"
+                    }
+                },
+                "required": ["model_func_str", "params", "x_data", "y_data"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "plot_in_2d",
             "description": "生成一个2D图表并返回图像文件路径。",
             "parameters": {
@@ -293,8 +352,236 @@ tools = [
                 "required": ["x_data", "y_data", "z_data", "title", "x_label", "y_label", "z_label", "file_path"]
             }
         }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "double_plot_2d",
+            "description": "生成一个包含两组数据的2D图表并返回图像文件路径。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "x1_data": {
+                        "type": "array",
+                        "items": {"type": "number"},
+                        "description": "第一组数据的X轴数据列表。"
+                    },
+                    "y1_data": {
+                        "type": "array",
+                        "items": {"type": "number"},
+                        "description": "第一组数据的Y轴数据列表。"
+                    },
+                    "x2_data": {
+                        "type": "array",
+                        "items": {"type": "number"},
+                        "description": "第二组数据的X轴数据列表。"
+                    },
+                    "y2_data": {
+                        "type": "array",
+                        "items": {"type": "number"},
+                        "description": "第二组数据的Y轴数据列表。"
+                    },
+                    "title": {
+                        "type": "string",
+                        "description": "图表标题。"
+                    },
+                    "x_label": {
+                        "type": "string",
+                        "description": "X轴标签。"
+                    },
+                    "y_label": {
+                        "type": "string",
+                        "description": "Y轴标签。"
+                    },
+                    "file_path": {
+                        "type": "string",
+                        "description": "保存图像的文件路径。"
+                    }
+                },
+                "required": ["x1_data", "y1_data", "x2_data", "y2_data", 	"title",	"x_label",	"y_label",	"file_path"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "double_plot_3d",
+            "description": "生成一个包含两组数据的3D图表并返回图像文件路径。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "x1_data": {
+                        "type": "array",
+                        "items": {"type": "number"},
+                        "description": "第一组数据的X轴数据列表。"
+                    },
+                    "y1_data": {
+                        "type": "array",
+                        "items": {"type": "number"},
+                        "description": "第一组数据的Y轴数据列表。"
+                    },
+                    "z1_data": {
+                        "type": "array",
+                        "items": {"type": "number"},
+                        "description": "第一组数据的Z轴数据列表。"
+                    },
+                    "x2_data": {
+                        "type": "array",
+                        "items": {"type": "number"},
+                        "description": "第二组数据的X轴数据列表。"
+                    },
+                    "y2_data": {
+                        "type": "array",
+                        "items": {"type": "number"},
+                        "description": "第二组数据的Y轴数据列表。"
+                    },
+                    "z2_data": {
+                        "type": "array",
+                        "items": {"type": "number"},
+                        "description": "第二组数据的Z轴数据列表。"
+                    },
+                    "title": {
+                        "type": "string",
+                        "description": "图表标题。"
+                    },
+                    "x_label": {
+                        "type": "string",
+                        "description": "X轴标签。"
+                    },
+                    "y_label": {
+                        "type": "string",
+                        "description": "Y轴标签。"
+                    },
+                    "z_label": {
+                        "type": "string",
+                        "description": "Z轴标签。"
+                    },
+                    "file_path": {
+                        "type": "string",
+                        "description": 	"保存图像的文件路径。"
+                    }
+                },
+                "required": ["x1_data", "y1_data", "z1_data", "x2_data", "y2_data", "z2_data", "title", "x_label", "y_label", "z_label", "file_path"]
+            }
+        }
     }
 ]
+
+
+def _normalize_content(content: Any) -> Optional[str]:
+    """Convert message content to a plain string."""
+    if content is None:
+        return None
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        text_fragments: List[str] = []
+        for part in content:
+            if isinstance(part, dict):
+                text_fragments.append(part.get("text") or "")
+            elif isinstance(part, str):
+                text_fragments.append(part)
+        normalized = "".join(text_fragments)
+        return normalized or None
+    return str(content)
+
+
+def _message_to_dict(message: Any) -> Dict[str, Any]:
+    """Convert OpenAI SDK message objects into plain dictionaries."""
+    if isinstance(message, dict):
+        return {
+            "role": message.get("role"),
+            "content": _normalize_content(message.get("content")),
+            "tool_calls": message.get("tool_calls") or [],
+        }
+
+    data = message.model_dump()
+    return {
+        "role": data.get("role", "assistant"),
+        "content": _normalize_content(data.get("content")),
+        "tool_calls": data.get("tool_calls") or [],
+    }
+
+
+async def _stream_chat_completion(messages: List[Dict[str, Any]], emit_tokens: bool = True) -> Dict[str, Any]:
+    """Stream tokens from the model while assembling a structured response."""
+    stream = await agent.chat.completions.create(
+        model="deepseek-chat",
+        messages=messages,
+        tools=tools,
+        tool_choice="auto",
+        stream=True,
+    )
+
+    content_parts: List[str] = []
+    tool_calls: Dict[int, Dict[str, Any]] = {}
+
+    async for chunk in stream:
+        chunk_dict = chunk.model_dump()
+        choices = chunk_dict.get("choices") or []
+        if not choices:
+            continue
+
+        delta = choices[0].get("delta") or {}
+
+        for part in delta.get("content") or []:
+            text = part.get("text") if isinstance(part, dict) else part
+            if text:
+                content_parts.append(text)
+                if emit_tokens:
+                    print(text, end="", flush=True)
+
+        for tool_delta in delta.get("tool_calls") or []:
+            index = tool_delta.get("index", 0)
+            tool_entry = tool_calls.setdefault(
+                index,
+                {
+                    "id": tool_delta.get("id"),
+                    "type": tool_delta.get("type", "function"),
+                    "function": {"name": "", "arguments": ""},
+                },
+            )
+
+            if tool_delta.get("id"):
+                tool_entry["id"] = tool_delta["id"]
+
+            function_payload = tool_delta.get("function") or {}
+            if function_payload.get("name"):
+                tool_entry["function"]["name"] = function_payload["name"]
+            if function_payload.get("arguments"):
+                tool_entry["function"]["arguments"] += function_payload["arguments"]
+
+    if emit_tokens and content_parts:
+        print()
+
+    ordered_tool_calls = [
+        {
+            "id": entry.get("id"),
+            "type": entry.get("type", "function"),
+            "function": entry["function"],
+        }
+        for _, entry in sorted(tool_calls.items())
+    ]
+
+    return {
+        "role": "assistant",
+        "content": "".join(content_parts) if content_parts else None,
+        "tool_calls": ordered_tool_calls,
+    }
+
+
+async def create_chat_completion(messages: List[Dict[str, Any]], stream_output: bool = True) -> Dict[str, Any]:
+    """Create a chat completion, optionally streaming tokens to stdout."""
+    if stream_output:
+        return await _stream_chat_completion(messages)
+
+    response = await agent.chat.completions.create(
+        model="deepseek-chat",
+        messages=messages,
+        tools=tools,
+        tool_choice="auto",
+    )
+    return _message_to_dict(response.choices[0].message)
 
 async def call_tool(client: Client, function_name: str, function_args: Dict[str, Any]) -> Any:
     await client.ping()
@@ -333,26 +620,22 @@ async def ai_agent(client: Client, user_input: str) -> str:
 
     while True:
         print("Sending messages to AI agent:", messages)
-        response = await agent.chat.completions.create(
-            model="deepseek-chat",
-            messages=messages,
-            tools=tools,
-            tool_choice="auto"
-        )
-        # 如果你希望AI agent不止调用一个工具，可以把下面这行注释掉
-        response_message = response.choices[0].message
-        if not response_message.tool_calls:
-            print("AI agent didn't call any function. Now responding to user...")
-            return response_message.content
+        response_message = await create_chat_completion(messages, stream_output=True)
 
         # 扩展对话历史，方便AI agent参考上文
         messages.append(response_message)
-        
+
+        tool_calls = response_message.get("tool_calls") or []
+        if not tool_calls:
+            print("AI agent didn't call any function. Now responding to user...")
+            return response_message.get("content")
+
         # tool_calls是一个列表，tool_call是包含函数名和参数的字典元素
-        for tool_call in response_message.tool_calls:
-            function_name = tool_call.function.name
-            function_args = json.loads(tool_call.function.arguments)
-            tool_call_id = tool_call.id
+        for tool_call in tool_calls:
+            function_payload = tool_call.get("function") or {}
+            function_name = function_payload.get("name")
+            function_args = json.loads(function_payload.get("arguments", "{}"))
+            tool_call_id = tool_call.get("id")
 
             # 打印调试信息
             print(f"AI agent is calling tool: {function_name}")
@@ -362,45 +645,13 @@ async def ai_agent(client: Client, user_input: str) -> str:
             print(tool_result)
 
             # 将工具调用结果添加到对话历史
-            # 到这里开始报错TypeError: Object of type CallToolResult is not JSON serializable，记得查一下怎么回事
             messages.append({
                 "role": "tool",
                 "tool_call_id": tool_call_id,
                 "name": function_name,
                 "content": json.dumps(tool_result, ensure_ascii=False)
             })
-
-        # 工具结果已加入对话历史，向模型再次询问以生成自然语言答复
-        followup = await agent.chat.completions.create(
-            model="deepseek-chat",
-            messages=messages,
-            tools=tools,
-            tool_choice="auto"
-        )
-        final_message = followup.choices[0].message
-        if not final_message.tool_calls:
-            return final_message.content
-
-        # 如果模型仍要调用更多工具，必须先执行这些工具并添加对应的tool消息
-        messages.append(final_message)
-        for tool_call in final_message.tool_calls:
-            function_name = tool_call.function.name
-            function_args = json.loads(tool_call.function.arguments)
-            tool_call_id = tool_call.id
-
-            print(f"AI agent is calling tool: {function_name}")
-            print(f"With arguments and ID: {function_args}, {tool_call_id}")
-
-            tool_result = await call_tool(client, function_name, function_args)
-            print(tool_result)
-
-            messages.append({
-                "role": "tool",
-                "tool_call_id": tool_call_id,
-                "name": function_name,
-                "content": json.dumps(tool_result, ensure_ascii=False)
-            })
-        # 继续循环，向模型再次询问
+        # 工具结果已加入对话历史，继续循环
         continue
 
 async def main() -> None:
@@ -410,8 +661,7 @@ async def main() -> None:
             if user_input.lower() in ["exit", "quit"]:
                 print("Exiting...")
                 break
-            response = await ai_agent(client, user_input)
-            print("AI Agent response:", response)
+            await ai_agent(client, user_input)
 
 
 if __name__ == "__main__":
