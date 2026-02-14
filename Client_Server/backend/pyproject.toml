@@ -1,7 +1,7 @@
 [project]
 name = "service"
 version = "0.1.0"
-description = "Add your description here"
+description = "Reference pyproject from Client_Server_Backend"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [

@@ -1,0 +1,23 @@
+nicegui
+fastapi
+uvicorn[standard]
+python-docx
+openai
+langchain
+langchain-community
+sentence-transformers
+transformers
+tokenizers
+pydantic
+openpyxl
+python-multipart
+aiofiles
+aiohttp
+# MCP tools dependencies
+fastmcp
+mysql-connector-python
+bilibili-api
+psutil
+matplotlib
+# Optional: faiss-cpu may be difficult to install on Windows; install manually if needed
+# faiss-cpu

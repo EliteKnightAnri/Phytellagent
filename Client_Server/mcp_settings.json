@@ -4,7 +4,7 @@
             "command":"uv",
             "args":[
                 "--directory",
-                "E:/local_mcp/service/tools",
+                "mcp_service/tools",
                 "run",
                 "bilibili_tool.py"
             ]
@@ -14,7 +14,7 @@
             "command": "uv",
             "args": [
                 "--directory",
-                "E:/local_mcp/service/tools",
+                "mcp_service/tools",
                 "run",
                 "mysql_tool.py"
             ],
@@ -30,7 +30,7 @@
             "command": "uv",
             "args":[
                 "--directory",
-                "E:/local_mcp/service/tools",
+                "mcp_service/tools",
                 "run",
                 "system_info_tool.py"
             ]
