@@ -1,4 +1,4 @@
-local_mcp/
+local_mcp/Client_Server
 ├── .venv/                      # 虚拟环境
 ├── .git/                       # Git 仓库 (如果是独立仓库)
 ├── .gitignore                  # Git 忽略规则
@@ -16,7 +16,8 @@ local_mcp/
 │   ├── tools/
 │   │   ├── __init__.py
 │   │   ├── bilibili_tool.py      
-│   │   └── mysql_tool.py  
+│   │   ├── mysql_tool.py  
+│   │   └── system_info_tool.py
 └── model/
     ├── __init__.py
     └── schemas.py   

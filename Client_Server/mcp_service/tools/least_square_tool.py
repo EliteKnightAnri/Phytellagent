@@ -4,10 +4,33 @@ import sympy as sp
 from scipy.optimize import leastsq
 from sympy.printing.pycode import pycode
 from sympy.parsing.sympy_parser import parse_expr, standard_transformations
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 from fastmcp import FastMCP
 
 mcp = FastMCP("Least Square Method Server")
+
+
+def _split_payload(payload: Optional[Dict[str, Any]] = None) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+    payload = payload or {}
+    return payload.get("args") or {}, payload.get("meta") or {}
+
+
+def _as_list(value: Optional[Any]) -> Optional[list]:
+    if value is None:
+        return None
+    if isinstance(value, list):
+        return value
+    if isinstance(value, tuple):
+        return list(value)
+    return [value]
+
+
+def _error(message: str) -> Dict[str, Any]:
+    return {"status": "error", "message": message}
+
+
+def _success(data: Dict[str, Any]) -> Dict[str, Any]:
+    return {"status": "success", "data": data}
 
 def _safe_opt_to_list(obj):
     if obj is None:
@@ -126,78 +149,103 @@ def str_to_function_3d(func_str: str = "x + y", var_name: str = "x,y"):
 
 
 @mcp.tool()
-def least_square_fit_2d(x_data: list, y_data: list, model_func_str: str, initial_params: Optional[list] = None) -> Dict[str, Any]:
-    if model_func_str:
-        model_func = str_to_function_2d(model_func_str)
-    else:
-        func_str = input("Enter the model function in terms of x (e.g., 'sin(x) + cos(x)'):")
-        model_func = str_to_function_2d(func_str)
+def least_square_fit_2d(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    args, meta = _split_payload(payload)
+    x_data = _as_list(args.get("x_data"))
+    y_data = _as_list(args.get("y_data"))
+    model_func_str = args.get("model_func_str") or meta.get("model_func_str")
 
+    if not x_data or not y_data:
+        return _error("x_data and y_data are required")
+    if not model_func_str:
+        return _error("model_func_str is required")
+
+    model_func = str_to_function_2d(model_func_str)
+    initial_params = args.get("initial_params")
     if initial_params is None:
-        try:
-            param_count = int(getattr(model_func, 'param_count', None))
-        except Exception:
-            param_count = None
-        if param_count is None:
-            try:
-                param_count = max(1, model_func.__code__.co_argcount - 1)
-            except Exception:
-                param_count = 1
-        initial_params = np.ones(param_count)
+        param_count = int(getattr(model_func, 'param_count', 0) or 0)
+        initial_params = np.ones(max(param_count, 1))
 
     def error_func(params, x, y):
         return y - model_func(params, x)
 
-    optimized_params, covariance = leastsq(error_func, initial_params, args=(np.array(x_data), np.array(y_data)))
+    optimized_params, covariance = leastsq(
+        error_func,
+        initial_params,
+        args=(np.array(x_data), np.array(y_data)),
+    )
 
-    return {
+    return _success({
         "optimized_params": _safe_opt_to_list(optimized_params),
         "covariance": _safe_cov_to_serializable(covariance),
-        "param_names": getattr(model_func, 'param_names', None)
-    }
+        "param_names": getattr(model_func, 'param_names', None),
+    })
+
 
 @mcp.tool()
-def least_square_fit_3d(x_data: list, y_data: list, z_data: list, model_func_str: str, initial_params: Optional[list] = None) -> Dict[str, Any]:
-    if model_func_str:
-        model_func = str_to_function_3d(model_func_str, var_name="x,y")
-    else:
-        func_str = input("Enter the model function in terms of x and y (e.g., 'sin(x) + cos(y)'):")
-        model_func = str_to_function_3d(func_str, var_name="x,y")
+def least_square_fit_3d(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    args, meta = _split_payload(payload)
+    x_data = _as_list(args.get("x_data"))
+    y_data = _as_list(args.get("y_data"))
+    z_data = _as_list(args.get("z_data"))
+    model_func_str = args.get("model_func_str") or meta.get("model_func_str")
 
+    if not x_data or not y_data or not z_data:
+        return _error("x_data, y_data and z_data are required")
+    if not model_func_str:
+        return _error("model_func_str is required")
+
+    model_func = str_to_function_3d(model_func_str, var_name="x,y")
+    initial_params = args.get("initial_params")
     if initial_params is None:
-        try:
-            param_count = int(getattr(model_func, 'param_count', None))
-        except Exception:
-            param_count = None
-        if param_count is None:
-            try:
-                param_count = max(1, model_func.__code__.co_argcount - 2)
-            except Exception:
-                param_count = 1
-        initial_params = np.ones(param_count)
+        param_count = int(getattr(model_func, 'param_count', 0) or 0)
+        initial_params = np.ones(max(param_count, 1))
 
     def error_func(params, x, y, z):
         return z - model_func(params, x, y)
 
-    optimized_params, covariance = leastsq(error_func, initial_params, args=(np.array(x_data), np.array(y_data), np.array(z_data)))
+    optimized_params, covariance = leastsq(
+        error_func,
+        initial_params,
+        args=(np.array(x_data), np.array(y_data), np.array(z_data)),
+    )
 
-    return {
+    return _success({
         "optimized_params": _safe_opt_to_list(optimized_params),
         "covariance": _safe_cov_to_serializable(covariance),
-        "param_names": getattr(model_func, 'param_names', None)
-    }
+        "param_names": getattr(model_func, 'param_names', None),
+    })
+
 
 @mcp.tool()
-def generate_pred_values_2d(x_data: list, model_func_str: str, params: list) -> Dict[str, Any]:
+def generate_pred_values_2d(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    args, meta = _split_payload(payload)
+    x_data = _as_list(args.get("x_data"))
+    model_func_str = args.get("model_func_str") or meta.get("model_func_str")
+    params = _as_list(args.get("params"))
+
+    if not x_data or not model_func_str or params is None:
+        return _error("x_data, model_func_str and params are required")
+
     model_func = str_to_function_2d(model_func_str)
     predicted_y = model_func(params, np.array(x_data))
-    return {"predicted_y": _safe_opt_to_list(predicted_y)}
+    return _success({"predicted_y": _safe_opt_to_list(predicted_y)})
+
 
 @mcp.tool()
-def generate_pred_values_3d(x_data: list, y_data: list, model_func_str: str, params: list) -> Dict[str, Any]:
+def generate_pred_values_3d(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    args, meta = _split_payload(payload)
+    x_data = _as_list(args.get("x_data"))
+    y_data = _as_list(args.get("y_data"))
+    model_func_str = args.get("model_func_str") or meta.get("model_func_str")
+    params = _as_list(args.get("params"))
+
+    if not x_data or not y_data or not model_func_str or params is None:
+        return _error("x_data, y_data, model_func_str and params are required")
+
     model_func = str_to_function_3d(model_func_str, var_name="x,y")
     predicted_z = model_func(params, np.array(x_data), np.array(y_data))
-    return {"predicted_z": _safe_opt_to_list(predicted_z)}
+    return _success({"predicted_z": _safe_opt_to_list(predicted_z)})
 
 if __name__ == "__main__":
     mcp.run(transport="stdio")

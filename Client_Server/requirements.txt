@@ -1,5 +1,6 @@
 nicegui
 fastapi
+faiss-cpu
 uvicorn[standard]
 python-docx
 openai
@@ -16,8 +17,9 @@ aiohttp
 # MCP tools dependencies
 fastmcp
 mysql-connector-python
-bilibili-api
+httpx
 psutil
 matplotlib
+pandas
 # Optional: faiss-cpu may be difficult to install on Windows; install manually if needed
 # faiss-cpu

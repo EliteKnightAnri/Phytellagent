@@ -1,7 +1,7 @@
 import platform
 import os
 import psutil
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Tuple
 from fastmcp import FastMCP
 
 mcp = FastMCP('System Info MCP Server')
@@ -12,8 +12,15 @@ def default_root() -> str:
         return drive + os.sep if drive else os.sep
     return os.sep
 
+def _split_payload(payload: Optional[Dict[str, Any]] = None) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+    payload = payload or {}
+    return payload.get("args") or {}, payload.get("meta") or {}
+
+
 @mcp.tool()
-def get_system_info(key: Optional[str] = None) -> Dict[str, Any]:
+def get_system_info(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    args, _ = _split_payload(payload)
+    key = args.get("key")
     info = {
         "os": platform.system(),
         "os_version": platform.version(),
@@ -25,19 +32,21 @@ def get_system_info(key: Optional[str] = None) -> Dict[str, Any]:
         "python_version": platform.python_version(),
     }
     if key:
-        return {"result": info.get(key)}
-    return {"result": info}
+        return {"status": "success", "data": info.get(key), "key": key}
+    return {"status": "success", "data": info}
 
 @mcp.tool()
-def get_environment_variables() -> Dict[str, str]:
-    return dict(os.environ)
+def get_environment_variables(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    _split_payload(payload)  # 保持接口一致
+    return {"status": "success", "data": dict(os.environ)}
 
 @mcp.tool()
-def disk_usage(path: Optional[str] = None) -> Dict[str, Any]:
-    if not path:
-        path = default_root()
+def disk_usage(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    args, meta = _split_payload(payload)
+    path = args.get("path") or meta.get("path") or default_root()
     usage = psutil.disk_usage(path)
     return {
+        "status": "success",
         "path": path,
         "total_gb": round(usage.total / (1024 ** 3), 2),
         "used_gb": round(usage.used / (1024 ** 3), 2),

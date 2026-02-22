@@ -7,6 +7,11 @@ import subprocess
 from openai import AsyncOpenAI
 from fastmcp import Client
 
+try:
+    from .tool_specs import get_tool_schemas
+except ImportError:  # pragma: no cover - fallback for script execution
+    from tool_specs import get_tool_schemas  # type: ignore
+
 # 使用环境变量配置 API Key 与 base_url，避免将密钥写入代码
 DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY")
 DEEPSEEK_BASE_URL = os.environ.get("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1")
@@ -16,22 +21,7 @@ agent = AsyncOpenAI(
     base_url=DEEPSEEK_BASE_URL,
 )
 
-# 这是DeepSeek的工具定义格式
-tools = [
-    # (保留原文件中的 tools 定义 — 这里为简洁示例只保留部分)
-    {
-        "type": "function",
-        "function": {
-            "name": "search_videos",
-            "description": "在哔哩哔哩 (Bilibili) 上搜索视频内容。",
-            "parameters": {
-                "type": "object",
-                "properties": {"keyword": {"type": "string"}},
-                "required": ["keyword"],
-            },
-        },
-    },
-]
+tools = get_tool_schemas()
 
 
 def _normalize_content(content: Any) -> Optional[str]:
@@ -67,13 +57,35 @@ def _message_to_dict(message: Any) -> Dict[str, Any]:
     }
 
 
-async def call_tool(client: Client, function_name: str, function_args: Dict[str, Any]) -> Any:
+def _latest_user_prompt(messages: List[Dict[str, Any]]) -> Optional[str]:
+    for msg in reversed(messages):
+        if msg.get("role") == "user":
+            return msg.get("content") or None
+    return None
+
+
+async def call_tool(client: Client, function_name: str, function_args: Dict[str, Any], messages: List[Dict[str, Any]]) -> Any:
     await client.ping()
     await client.list_tools()
     await client.list_resources()
     await client.list_prompts()
 
-    result = await client.call_tool(function_name, function_args)
+    args = function_args or {}
+    if isinstance(args, str):
+        try:
+            args = json.loads(args)
+        except Exception:
+            args = {"raw": args}
+
+    payload = {
+        "args": args,
+        "meta": {},
+    }
+    user_prompt = _latest_user_prompt(messages)
+    if user_prompt:
+        payload["meta"]["prompt"] = user_prompt
+
+    result = await client.call_tool(function_name, {"payload": payload})
 
     try:
         result = json.loads(result)
@@ -88,7 +100,13 @@ async def call_tool(client: Client, function_name: str, function_args: Dict[str,
 
 async def ai_agent(client: Client, user_input: str) -> str:
     messages = [
-        {"role": "system", "content": "你是一个AI agent，可调用工具帮助用户完成任务。"},
+        {
+            "role": "system",
+            "content": (
+                "你是一个 AI Agent，可以调用 MCP 工具获取实时信息。"
+                "凡是涉及本机环境、系统信息、磁盘状态、B 站检索或数据库访问时，一定要优先调用对应工具，不要凭空回答。"
+            ),
+        },
         {"role": "user", "content": user_input},
     ]
 
@@ -106,7 +124,7 @@ async def ai_agent(client: Client, user_input: str) -> str:
             function_args = json.loads(function_payload.get("arguments", "{}"))
             tool_call_id = tool_call.get("id")
 
-            tool_result = await call_tool(client, function_name, function_args)
+            tool_result = await call_tool(client, function_name, function_args, messages)
             messages.append({
                 "role": "tool",
                 "tool_call_id": tool_call_id,

@@ -10,8 +10,14 @@ from nicegui import ui
 # 真实后端客户端
 # ==========================================
 class BackendClient:
-    def __init__(self, base_url: str = "http://127.0.0.1:8000"):
-        self.base_url = base_url
+    def __init__(self, base_url: str = None):
+        # 优先使用环境变量 BACKEND_URL（方便在端口非标准或已调整时快速配置），
+        # 否则回退到本仓库常用开发端口 8001（backend 已在 8001 上运行时更可靠）。
+        if base_url:
+            self.base_url = base_url
+        else:
+            # 默认指向本地开发后端（端口 8000），可通过环境变量 BACKEND_URL 覆盖
+            self.base_url = os.environ.get("BACKEND_URL", "http://127.0.0.1:8000")
 
     # 1. 获取文件列表 (加上 trust_env=False 防止代理拦截)
     async def get_files(self):
@@ -180,6 +186,84 @@ class BackendClient:
                     f"{self.base_url}/files/{filename}/toggle",
                     json={"enabled": enabled},
                 )
+                return resp.json()
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+
+    async def call_mcp(self, server: str, tool: str, args: dict = None, meta: dict = None):
+        """Call MCP tool via backend forwarding endpoint `/mcp/call` using the unified payload envelope."""
+        payload = {"server": server, "tool": tool, "args": args or {}, "meta": meta or {}}
+        try:
+            async with httpx.AsyncClient(timeout=60.0, trust_env=False) as client:
+                resp = await client.post(f"{self.base_url}/mcp/call", json=payload)
+                return resp.json()
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+
+    async def agent_ask(self, prompt: str, server: Optional[str] = None, tool: Optional[str] = None, args: Optional[dict] = None, meta: Optional[dict] = None, api_key: Optional[str] = None):
+        """Call backend `/agent/ask` endpoint with unified payload envelope. If `api_key` provided, sent via `X-API-Key`."""
+        payload = {
+            "prompt": prompt,
+            "server": server,
+            "tool": tool,
+            "args": args or {},
+            "meta": meta or {},
+        }
+        headers = {}
+        if api_key:
+            headers["X-API-Key"] = api_key
+        try:
+            async with httpx.AsyncClient(timeout=60.0, trust_env=False) as client:
+                resp = await client.post(f"{self.base_url}/agent/ask", json=payload, headers=headers)
+                return resp.json()
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+
+    async def get_settings(self):
+        try:
+            async with httpx.AsyncClient(timeout=15.0, trust_env=False) as client:
+                resp = await client.get(f"{self.base_url}/settings")
+                return resp.json()
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+
+    async def set_settings(self, deepseek_api_key: Optional[str] = None, mysql_config: Optional[dict] = None):
+        try:
+            payload = {}
+            if deepseek_api_key is not None:
+                payload["deepseek_api_key"] = deepseek_api_key
+            if mysql_config:
+                payload.update({
+                    "mysql_host": mysql_config.get("host"),
+                    "mysql_port": mysql_config.get("port"),
+                    "mysql_user": mysql_config.get("user"),
+                    "mysql_password": mysql_config.get("password"),
+                    "mysql_database": mysql_config.get("database"),
+                })
+            if not payload:
+                return {"status": "error", "message": "no settings provided"}
+            async with httpx.AsyncClient(timeout=15.0, trust_env=False) as client:
+                resp = await client.post(f"{self.base_url}/settings", json=payload)
+                return resp.json()
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+
+    async def set_mysql_env(self, mysql_config: dict):
+        """Set MySQL env vars in backend process without persisting to disk."""
+        try:
+            async with httpx.AsyncClient(timeout=15.0, trust_env=False) as client:
+                resp = await client.post(f"{self.base_url}/set_mysql_env", json=mysql_config)
+                return resp.json()
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+
+    async def set_deepseek_env(self, deepseek_config: dict):
+        """Set Deepseek API key/base_url in backend process without persisting to disk."""
+        try:
+            async with httpx.AsyncClient(timeout=15.0, trust_env=False) as client:
+                resp = await client.post(f"{self.base_url}/set_deepseek_env", json=deepseek_config)
                 return resp.json()
         except Exception as e:
             return {"status": "error", "message": str(e)}

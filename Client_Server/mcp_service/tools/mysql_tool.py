@@ -1,3 +1,5 @@
+from typing import Dict, Optional, Tuple, Any
+
 from mysql.connector import connect, Error
 from fastmcp import FastMCP
 import json
@@ -15,45 +17,80 @@ def log_config():
         print(f"Configuration file not found at {CONFIG_PATH}")
         return {}
 
-config = log_config()
+def _build_db_config() -> Dict[str, Any]:
+    cfg = log_config()
+    mysql_env = cfg.get("mcpServers", {}).get("mysql", {}).get("env", {})
 
-mysql_env = config.get("mcpServers", {}).get("mysql", {}).get("env", {})
+    def _pick(key: str, default: Optional[str] = None) -> Optional[str]:
+        return os.environ.get(key) or mysql_env.get(key) or default
 
-DB_CONFIG = {
-    'host': mysql_env.get('MYSQL_HOST', 'localhost'),
-    'port': int(mysql_env.get('MYSQL_PORT', 3306)),
-    'user': mysql_env.get('MYSQL_USER', 'root'),
-    'password': mysql_env.get('MYSQL_PASSWORD', ''),
-    'database': mysql_env.get('MYSQL_DATABASE', 'test_db')
-}
+    host = _pick('MYSQL_HOST', 'localhost')
+    port_raw = _pick('MYSQL_PORT', '3306')
+    try:
+        port = int(port_raw) if port_raw is not None else 3306
+    except ValueError:
+        port = 3306
+
+    return {
+        'host': host,
+        'port': port,
+        'user': _pick('MYSQL_USER', 'root'),
+        'password': _pick('MYSQL_PASSWORD', ''),
+        'database': _pick('MYSQL_DATABASE', 'test_db'),
+    }
 
 # 使用FastMCP创建服务器
 mcp = FastMCP(name="MySQL tool")
 
-@mcp.tool()
-def execute_query(query: str) -> dict:
-    connection = None
 
+def _split_payload(payload: Optional[Dict[str, Any]] = None) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+    payload = payload or {}
+    return payload.get("args") or {}, payload.get("meta") or {}
+
+
+@mcp.tool()
+def execute_query(payload: Optional[Dict[str, Any]] = None, query: Optional[str] = None) -> Dict[str, Any]:
+    """兼容两种调用方式：
+    - 被 aggregator 以 kwargs 形式调用：execute_query(query="...")
+    - 被直接以 payload 调用：execute_query(payload={"query": "..."})
+    """
+    if query:
+        sql = query
+    else:
+        args, meta = _split_payload(payload)
+        sql = args.get("query") or args.get("sql") or meta.get("prompt")
+    if not sql:
+        return {"status": "error", "message": "sql/query is required"}
+
+    connection = None
+    cursor = None
     try:
-        connection = connect(**DB_CONFIG)
-        
-        if connection.is_connected():
-            cursor = connection.cursor(dictionary=True)
-            cursor.execute(query)
-            
-            if cursor.description is not None:
-                columns = [desc[0] for desc in cursor.description]
-                results = cursor.fetchall()
-                return {"columns": columns, "results": results}
-            else:
-                connection.commit()
-                return {"rowcount": cursor.rowcount, "message": f"Query affected {cursor.rowcount} rows"}
-                
-    except Error as e:
-        return {"error": str(e)}
+        db_config = _build_db_config()
+        connection = connect(**db_config)
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute(sql)
+
+        if cursor.description is not None:
+            columns = [desc[0] for desc in cursor.description]
+            results = cursor.fetchall()
+            return {"status": "success", "data": {"columns": columns, "rows": results}, "query": sql}
+
+        connection.commit()
+        return {
+            "status": "success",
+            "data": {"rowcount": cursor.rowcount},
+            "query": sql,
+        }
+
+    except Error as exc:
+        return {"status": "error", "message": str(exc), "query": sql}
     finally:
+        if cursor:
+            try:
+                cursor.close()
+            except Exception:
+                pass
         if connection and connection.is_connected():
-            cursor.close()
             connection.close()
 
 if __name__ == "__main__":

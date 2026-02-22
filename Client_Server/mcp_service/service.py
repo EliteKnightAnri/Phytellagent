@@ -10,9 +10,11 @@ from __future__ import annotations
 import asyncio
 import json
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 
 from fastmcp import Client, FastMCP
+import traceback
+from datetime import datetime as _dt
 
 
 # Paths to child MCP servers.
@@ -53,15 +55,27 @@ class SubServerManager:
             self._locks[name] = asyncio.Lock()
         return self._locks[name]
 
-    async def call_tool(self, server: str, tool_name: str, args: Dict[str, Any]) -> Any:
+    async def call_tool(self, server: str, tool_name: str, payload: Dict[str, Any]) -> Any:
         client = self._get_client(server)
         lock = self._get_lock(server)
+        payload = payload or {}
 
         async with lock:
-            async with client:
-                await client.ping()
-                result = await client.call_tool(tool_name, args)
-                return self._normalize_result(result)
+            try:
+                async with client:
+                    await client.ping()
+                    result = await client.call_tool(tool_name, {"payload": payload})
+                    return self._normalize_result(result)
+            except Exception as e:
+                # 记录 traceback 到文件，便于诊断子服务器问题
+                try:
+                    log_path = (Path(__file__).resolve().parent / "mcp_service_error.log")
+                    with open(log_path, "a", encoding="utf-8") as f:
+                        f.write("=== MCP SERVICE ERROR: " + _dt.now().isoformat() + " ===\n")
+                        f.write(traceback.format_exc() + "\n\n")
+                except Exception:
+                    pass
+                raise
 
     @staticmethod
     def _normalize_result(result: Any) -> Any:
@@ -89,144 +103,186 @@ class SubServerManager:
 manager = SubServerManager(CHILD_SERVERS)
 
 
-@mcp.tool()
-async def search_videos(keyword: str) -> Any:
-    return await manager.call_tool("bilibili", "search_videos", {"keyword": keyword})
+def _split_payload(payload: Optional[Dict[str, Any]] = None) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+    payload = payload or {}
+    args = payload.get("args") or {}
+    meta = payload.get("meta") or {}
+    return args, meta
+
+
+def _child_payload(args: Optional[Dict[str, Any]] = None, meta: Optional[Dict[str, Any]] = None) -> Dict[str, Dict[str, Any]]:
+    return {"args": args or {}, "meta": meta or {}}
 
 
 @mcp.tool()
-async def execute_query(sql: str) -> Any:
-    return await manager.call_tool("mysql", "execute_query", {"query": sql})
+async def search_videos(payload: Optional[Dict[str, Any]] = None) -> Any:
+    args, meta = _split_payload(payload)
+    keyword = args.get("keyword") or meta.get("prompt")
+    if not keyword:
+        raise ValueError("keyword is required")
+    return await manager.call_tool("bilibili", "search_videos", _child_payload({"keyword": keyword}, meta))
 
 
 @mcp.tool()
-async def get_system_info(key: Optional[str] = None) -> Any:
-    return await manager.call_tool("system_info", "get_system_info", {"key": key})
+async def execute_query(payload: Optional[Dict[str, Any]] = None) -> Any:
+    args, meta = _split_payload(payload)
+    sql = args.get("sql") or args.get("query") or meta.get("prompt")
+    if not sql:
+        raise ValueError("sql/query is required")
+    return await manager.call_tool("mysql", "execute_query", _child_payload({"query": sql}, meta))
 
 
 @mcp.tool()
-async def get_environment_variables() -> Any:
-    return await manager.call_tool("system_info", "get_environment_variables", {})
+async def get_system_info(payload: Optional[Dict[str, Any]] = None) -> Any:
+    args, meta = _split_payload(payload)
+    key = args.get("key")
+    return await manager.call_tool("system_info", "get_system_info", _child_payload({"key": key}, meta))
 
 
 @mcp.tool()
-async def disk_usage(path: str) -> Any:
-    return await manager.call_tool("system_info", "disk_usage", {"path": path})
+async def get_environment_variables(payload: Optional[Dict[str, Any]] = None) -> Any:
+    _, meta = _split_payload(payload)
+    return await manager.call_tool("system_info", "get_environment_variables", _child_payload({}, meta))
 
 
 @mcp.tool()
-async def import_csv(file_path: str, sep: str = ',', header: Optional[int] = None, encoding: str = 'utf-8', dtype: Optional[dict] = None, parse_dates: Optional[list] = None, index_col: Optional[int] = None, usecols: Optional[list] = None) -> Any:
-    return await manager.call_tool("pandas", "import_csv", {
-        "file_path": file_path,
-        "sep": sep,
-        "header": header,
-        "encoding": encoding,
-        "dtype": dtype,
-        "parse_dates": parse_dates,
-        "index_col": index_col,
-        "usecols": usecols,
-    })
+async def disk_usage(payload: Optional[Dict[str, Any]] = None) -> Any:
+    args, meta = _split_payload(payload)
+    path = args.get("path") or meta.get("path")
+    return await manager.call_tool("system_info", "disk_usage", _child_payload({"path": path}, meta))
 
 
 @mcp.tool()
-async def least_square_fit_2d(x_data: list, y_data: list, model_func_str: str, initial_params: Optional[list] = None) -> Any:
-    return await manager.call_tool("least_square", "least_square_fit_2d", {
-        "x_data": x_data,
-        "y_data": y_data,
-        "model_func_str": model_func_str,
-        "initial_params": initial_params,
-    })
+async def import_csv(payload: Optional[Dict[str, Any]] = None) -> Any:
+    args, meta = _split_payload(payload)
+    child_args = {
+        "file_path": args.get("file_path"),
+        "sep": args.get("sep", ","),
+        "header": args.get("header"),
+        "encoding": args.get("encoding", "utf-8"),
+        "dtype": args.get("dtype"),
+        "parse_dates": args.get("parse_dates"),
+        "index_col": args.get("index_col"),
+        "usecols": args.get("usecols"),
+    }
+    return await manager.call_tool("pandas", "import_csv", _child_payload(child_args, meta))
 
 
 @mcp.tool()
-async def least_square_fit_3d(x_data: list, y_data: list, z_data: list, model_func_str: str, initial_params: Optional[list] = None) -> Any:
-    return await manager.call_tool("least_square", "least_square_fit_3d", {
-        "x_data": x_data,
-        "y_data": y_data,
-        "z_data": z_data,
-        "model_func_str": model_func_str,
-        "initial_params": initial_params,
-    })
+async def least_square_fit_2d(payload: Optional[Dict[str, Any]] = None) -> Any:
+    args, meta = _split_payload(payload)
+    child_args = {
+        "x_data": args.get("x_data") or [],
+        "y_data": args.get("y_data") or [],
+        "model_func_str": args.get("model_func_str"),
+        "initial_params": args.get("initial_params"),
+    }
+    return await manager.call_tool("least_square", "least_square_fit_2d", _child_payload(child_args, meta))
 
 
 @mcp.tool()
-async def generate_pred_values_2d(x_data: list, model_func_str: str, params: list) -> Any:
-    return await manager.call_tool("least_square", "generate_pred_values_2d", {
-        "x_data": x_data,
-        "model_func_str": model_func_str,
-        "params": params,
-    })
+async def least_square_fit_3d(payload: Optional[Dict[str, Any]] = None) -> Any:
+    args, meta = _split_payload(payload)
+    child_args = {
+        "x_data": args.get("x_data") or [],
+        "y_data": args.get("y_data") or [],
+        "z_data": args.get("z_data") or [],
+        "model_func_str": args.get("model_func_str"),
+        "initial_params": args.get("initial_params"),
+    }
+    return await manager.call_tool("least_square", "least_square_fit_3d", _child_payload(child_args, meta))
 
 
 @mcp.tool()
-async def generate_pred_values_3d(x_data: list, y_data: list, model_func_str: str, params: list) -> Any:
-    return await manager.call_tool("least_square", "generate_pred_values_3d", {
-        "x_data": x_data,
-        "y_data": y_data,
-        "model_func_str": model_func_str,
-        "params": params,
-    })
+async def generate_pred_values_2d(payload: Optional[Dict[str, Any]] = None) -> Any:
+    args, meta = _split_payload(payload)
+    child_args = {
+        "x_data": args.get("x_data") or [],
+        "model_func_str": args.get("model_func_str"),
+        "params": args.get("params"),
+    }
+    return await manager.call_tool("least_square", "generate_pred_values_2d", _child_payload(child_args, meta))
 
 
 @mcp.tool()
-async def plot_in_2d(x_data: list, y_data: list, title: str = "2D Figure", x_label: str = "X-Axis", y_label: str = "Y-Axis", file_path: str = "2d_figure.png") -> Dict[str, Any]:
-    return await manager.call_tool("matplotlib", "plot_in_2d", {
-        "x_data": x_data,
-        "y_data": y_data,
-        "title": title,
-        "x_label": x_label,
-        "y_label": y_label,
-        "file_path": file_path
-    })
+async def generate_pred_values_3d(payload: Optional[Dict[str, Any]] = None) -> Any:
+    args, meta = _split_payload(payload)
+    child_args = {
+        "x_data": args.get("x_data") or [],
+        "y_data": args.get("y_data") or [],
+        "model_func_str": args.get("model_func_str"),
+        "params": args.get("params"),
+    }
+    return await manager.call_tool("least_square", "generate_pred_values_3d", _child_payload(child_args, meta))
 
 
 @mcp.tool()
-async def plot_in_3d(x_data: list, y_data: list, z_data: list, title: str = "3D Figure", x_label: str = "X-Axis", y_label: str = "Y-Axis", z_label: str = "Z-Axis", file_path: str = "3d_figure.png") -> Dict[str, Any]:
-    return await manager.call_tool("matplotlib", "plot_in_3d", {
-        "x_data": x_data,
-        "y_data": y_data,
-        "z_data": z_data,
-        "title": title,
-        "x_label": x_label,
-        "y_label": y_label,
-        "z_label": z_label,
-        "file_path": file_path
-    })
+async def plot_in_2d(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    args, meta = _split_payload(payload)
+    child_args = {
+        "x_data": args.get("x_data") or [],
+        "y_data": args.get("y_data") or [],
+        "title": args.get("title", "2D Figure"),
+        "x_label": args.get("x_label", "X-Axis"),
+        "y_label": args.get("y_label", "Y-Axis"),
+        "file_path": args.get("file_path", "2d_figure.png"),
+    }
+    return await manager.call_tool("matplotlib", "plot_in_2d", _child_payload(child_args, meta))
 
 
 @mcp.tool()
-async def double_plot_2d(x1_data: list, y1_data: list, x2_data: list, y2_data: list, title: str = "Double 2D Figure", x_label: str = "X-Axis", y_label: str = "Y-Axis", file_path: str = "double_2d_figure.png") -> Dict[str, Any]:
-    return await manager.call_tool("matplotlib", "double_plot_2d", {
-        "x1_data": x1_data,
-        "y1_data": y1_data,
-        "x2_data": x2_data,
-        "y2_data": y2_data,
-        "title": title,
-        "x_label": x_label,
-        "y_label": y_label,
-        "file_path": file_path
-    })
+async def plot_in_3d(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    args, meta = _split_payload(payload)
+    child_args = {
+        "x_data": args.get("x_data") or [],
+        "y_data": args.get("y_data") or [],
+        "z_data": args.get("z_data") or [],
+        "title": args.get("title", "3D Figure"),
+        "x_label": args.get("x_label", "X-Axis"),
+        "y_label": args.get("y_label", "Y-Axis"),
+        "z_label": args.get("z_label", "Z-Axis"),
+        "file_path": args.get("file_path", "3d_figure.png"),
+    }
+    return await manager.call_tool("matplotlib", "plot_in_3d", _child_payload(child_args, meta))
 
 
 @mcp.tool()
-async def double_plot_3d(x1_data: list, y1_data: list, z1_data: list, x2_data: list, y2_data: list, z2_data: list, title: str = "Double 3D Figure", x_label: str = "X-Axis", y_label: str = "Y-Axis", z_label: str = "Z-Axis", file_path: str = "double_3d_figure.png") -> Dict[str, Any]:
-    return await manager.call_tool("matplotlib", "double_plot_3d", {
-        "x1_data": x1_data,
-        "y1_data": y1_data,
-        "z1_data": z1_data,
-        "x2_data": x2_data,
-        "y2_data": y2_data,
-        "z2_data": z2_data,
-        "title": title,
-        "x_label": x_label,
-        "y_label": y_label,
-        "z_label": z_label,
-        "file_path": file_path
-    })
+async def double_plot_2d(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    args, meta = _split_payload(payload)
+    child_args = {
+        "x1_data": args.get("x1_data") or [],
+        "y1_data": args.get("y1_data") or [],
+        "x2_data": args.get("x2_data") or [],
+        "y2_data": args.get("y2_data") or [],
+        "title": args.get("title", "Double 2D Figure"),
+        "x_label": args.get("x_label", "X-Axis"),
+        "y_label": args.get("y_label", "Y-Axis"),
+        "file_path": args.get("file_path", "double_2d_figure.png"),
+    }
+    return await manager.call_tool("matplotlib", "double_plot_2d", _child_payload(child_args, meta))
 
 
 @mcp.tool()
-async def list_child_tools() -> Dict[str, Any]:
+async def double_plot_3d(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    args, meta = _split_payload(payload)
+    child_args = {
+        "x1_data": args.get("x1_data") or [],
+        "y1_data": args.get("y1_data") or [],
+        "z1_data": args.get("z1_data") or [],
+        "x2_data": args.get("x2_data") or [],
+        "y2_data": args.get("y2_data") or [],
+        "z2_data": args.get("z2_data") or [],
+        "title": args.get("title", "Double 3D Figure"),
+        "x_label": args.get("x_label", "X-Axis"),
+        "y_label": args.get("y_label", "Y-Axis"),
+        "z_label": args.get("z_label", "Z-Axis"),
+        "file_path": args.get("file_path", "double_3d_figure.png"),
+    }
+    return await manager.call_tool("matplotlib", "double_plot_3d", _child_payload(child_args, meta))
+
+
+@mcp.tool()
+async def list_child_tools(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """List tools exposed by each child server for debugging/inspection."""
 
     summary: Dict[str, Any] = {}
@@ -238,6 +294,15 @@ async def list_child_tools() -> Dict[str, Any]:
                     await client.ping()
                     summary[name] = await client.list_tools()
         except Exception as exc:  # noqa: BLE001
+            # 记录更详细的异常信息到日志
+            try:
+                log_path = (Path(__file__).resolve().parent / "mcp_service_error.log")
+                with open(log_path, "a", encoding="utf-8") as f:
+                    f.write("=== LIST_CHILD_TOOLS ERROR: " + _dt.now().isoformat() + " ===\n")
+                    f.write(f"server={name}\n")
+                    f.write(traceback.format_exc() + "\n\n")
+            except Exception:
+                pass
             summary[name] = {"error": str(exc)}
     return summary
 
