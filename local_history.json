@@ -1,0 +1,79 @@
+{
+  "active_id": "646225df-bef1-4b55-8210-b186b7f0705d",
+  "history": [
+    {
+      "id": "646225df-bef1-4b55-8210-b186b7f0705d",
+      "title": "E:/local_mcp/data...",
+      "messages": [
+        {
+          "role": "assistant",
+          "content": "👋 **你好！我是聪明的智能助手。**",
+          "attachments": []
+        },
+        {
+          "role": "user",
+          "content": "E:/local_mcp/data.txt里面有一些表头为x和y的数据，分隔符为空格” “，你用pandas帮我把它导入一下，然后用matplotlib来绘制它的图，放在E:/local_mcp/plot.png。",
+          "attachments": []
+        },
+        {
+          "role": "assistant",
+          "content": "[错误] Specify server and tool, or enable automatic tool selection in the backend.",
+          "attachments": []
+        },
+        {
+          "role": "user",
+          "content": "E:/localmcp/data.txt里面有一些表头为x和y的数据，分隔符为空格” “，你用pandas帮我把它导入一下",
+          "attachments": []
+        },
+        {
+          "role": "assistant",
+          "content": "[错误] 1 validation error for call[import_csv]\nfile_path\n  Input should be a valid string [type=string_type, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.12/v/string_type",
+          "attachments": []
+        },
+        {
+          "role": "user",
+          "content": "有这样一串数据：x=[1, 2, 3, 4, 5]；y=[2, 4, 6, 8, 10]，帮我绘制这两个数据的曲线图，保存到E:/local_mcp/plot.png。",
+          "attachments": []
+        },
+        {
+          "role": "assistant",
+          "content": "{\n  \"content\": [\n    {\n      \"type\": \"text\",\n      \"text\": \"{\\\"file_path\\\":\\\"2d_figure.png\\\"}\",\n      \"annotations\": null,\n      \"_meta\": null\n    }\n  ],\n  \"structured_content\": {\n    \"file_path\": \"2d_figure.png\"\n  },\n  \"meta\": null,\n  \"data\": {\n    \"file_path\": \"2d_figure.png\"\n  },\n  \"is_error\": false\n}",
+          "attachments": []
+        }
+      ],
+      "session_file_ids": []
+    },
+    {
+      "id": "5440afe4-0ca5-4ac4-898a-b2ed51c427be",
+      "title": "示例对话",
+      "messages": [
+        {
+          "role": "assistant",
+          "content": "👋 **你好！我是你的智能助手。",
+          "attachments": []
+        },
+        {
+          "role": "user",
+          "content": "你好呀",
+          "attachments": []
+        },
+        {
+          "role": "assistant",
+          "content": "你好！",
+          "attachments": []
+        },
+        {
+          "role": "user",
+          "content": "如何学好物理",
+          "attachments": []
+        },
+        {
+          "role": "assistant",
+          "content": "先v我50",
+          "attachments": []
+        }
+      ],
+      "session_file_ids": []
+    }
+  ]
+}

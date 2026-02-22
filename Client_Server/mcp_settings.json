@@ -1,0 +1,39 @@
+{
+  "mcpServers": {
+    "bilibili": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "mcp_service/tools",
+        "run",
+        "bilibili_tool.py"
+      ]
+    },
+    "mysql": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "mcp_service/tools",
+        "run",
+        "mysql_tool.py"
+      ],
+      "env": {
+        "MYSQL_HOST": "localhost",
+        "MYSQL_PORT": "3306",
+        "MYSQL_USER": "root",
+        "MYSQL_PASSWORD": "Toho4717sama",
+        "MYSQL_DATABASE": "itheima"
+      }
+    },
+    "system_info": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "mcp_service/tools",
+        "run",
+        "system_info_tool.py"
+      ]
+    }
+  },
+  "deepseek_api_key": "sk-f39a29f6e7e24ac687c88285fc664dd7"
+}
