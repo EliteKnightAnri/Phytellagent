@@ -150,6 +150,39 @@ TOOL_SCHEMAS = [
     },
     {
         "type": "function",
+        "function":{
+            "name": "generate_pred_values_2d",
+            "description": "Generate predicted values for 2D data points based on a fitted model.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "x_data": {"type": "array", "items": {"type": "number"}, "description": "X-axis data points."},
+                    "model_func_str": {"type": "string", "description": "A string representation of the model function to fit, e.g. 'a*x + b'."},
+                    "params": {"type": "array", "items": {"type": "number"}, "description": "Optimized parameters for the model."}
+                },
+                "required": ["x_data", "model_func_str", "params"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function":{
+            "name": "generate_pred_values_3d",
+            "description": "Generate predicted values for 3D data points based on a fitted model.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "x_data": {"type": "array", "items": {"type": "number"}, "description": "X-axis data points."},
+                    "y_data": {"type": "array", "items": {"type": "number"}, "description": "Y-axis data points."},
+                    "model_func_str": {"type": "string", "description": "A string representation of the model function to fit, e.g. 'a*x + b*y + c'."},
+                    "params": {"type": "array", "items": {"type": "number"}, "description": "Optimized parameters for the model."}
+                },
+                "required": ["x_data", "y_data", "model_func_str", "params"],
+            },
+        },
+    },
+    {
+        "type": "function",
         "function": {
             "name": "plot_in_2d",
             "description": "Create a 2D line plot with one set of (x, y) data points and return the file path to the saved image.",

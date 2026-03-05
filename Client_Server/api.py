@@ -214,17 +214,11 @@ class BackendClient:
         if api_key:
             headers["X-API-Key"] = api_key
         try:
-<<<<<<< HEAD
             async with httpx.AsyncClient(timeout=None, trust_env=False) as client:
                 resp = await client.post(f"{self.base_url}/agent/ask", json=payload, headers=headers)
                 return resp.json()
         except asyncio.CancelledError:
             raise
-=======
-            async with httpx.AsyncClient(timeout=60.0, trust_env=False) as client:
-                resp = await client.post(f"{self.base_url}/agent/ask", json=payload, headers=headers)
-                return resp.json()
->>>>>>> c7609d2ed2a31afda6dd18e33262929ad9bef632
         except Exception as e:
             return {"status": "error", "message": str(e)}
 
