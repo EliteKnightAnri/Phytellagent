@@ -11,5 +11,7 @@ build/
 
 # Virtual environments
 .venv/
-repo.git/
 .venv
+
+# Git files
+repo.git/
