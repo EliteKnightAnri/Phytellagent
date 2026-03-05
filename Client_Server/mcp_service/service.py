@@ -28,11 +28,11 @@ CHILD_SERVERS: Dict[str, Path] = {
     "matplotlib": TOOLS_DIR / "matplotlib_tool.py",
     "pandas": TOOLS_DIR / "pandas_tool.py",
     "least_square": TOOLS_DIR / "least_square_tool.py",
+    "differential_equations": TOOLS_DIR / "differential_equations_tool.py",
+    "fourier": TOOLS_DIR / "fourier_tool.py",
 }
 
-
 mcp = FastMCP(name="Main Aggregator")
-
 
 class SubServerManager:
     """Lazy manager that proxies calls to child MCP servers."""
@@ -280,6 +280,74 @@ async def double_plot_3d(payload: Optional[Dict[str, Any]] = None) -> Dict[str, 
     }
     return await manager.call_tool("matplotlib", "double_plot_3d", _child_payload(child_args, meta))
 
+@mcp.tool()
+async def euler_diff_solver(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    args, meta = _split_payload(payload)
+    child_args = {
+        "diff_equation": args.get("diff_equation"),
+        "x0": args.get("x0", 0),
+        "y0": args.get("y0", 1),
+        "x_end": args.get("x_end", 10),
+        "step": args.get("step", 0.1),
+    }
+    return await manager.call_tool("differential_equations", "euler_diff_solver", _child_payload(child_args, meta))
+
+@mcp.tool()
+async def trapezoidal_diff_solver(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    args, meta = _split_payload(payload)
+    child_args = {
+        "diff_equation": args.get("diff_equation"),
+        "x0": args.get("x0", 0),
+        "y0": args.get("y0", 1),
+        "x_end": args.get("x_end", 10),
+        "step": args.get("step", 0.1),
+        "eps": args.get("eps", 1e-6),
+    }
+    return await manager.call_tool("differential_equations", "trapezoidal_diff_solver", _child_payload(child_args, meta))
+
+@mcp.tool()
+async def fourier_transform(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    args, meta = _split_payload(payload)
+    child_args = {
+        "signal": args.get("signal"),
+        "sample_rate": args.get("sample_rate", 1.0),
+        "window": args.get("window", "rect"),
+        "normalize": args.get("normalize", False),
+    }
+    return await manager.call_tool("fourier", "fourier_transform", _child_payload(child_args, meta))
+
+@mcp.tool()
+async def inverse_fourier_transform(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    args, meta = _split_payload(payload)
+    child_args = {
+        "real": args.get("real"),
+        "imag": args.get("imag"),
+        "normalize": args.get("normalize", False),
+    }
+    return await manager.call_tool("fourier", "inverse_fourier_transform", _child_payload(child_args, meta))
+
+@mcp.tool()
+async def short_time_fourier_transform(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    args, meta = _split_payload(payload)
+    child_args = {
+        "signal": args.get("signal"),
+        "window_size": args.get("window_size", 256),
+        "hop_length": args.get("hop_length", 64),
+        "window": args.get("window", "hann"),
+        "sample_rate": args.get("sample_rate", 1.0),
+    }
+    return await manager.call_tool("fourier", "short_time_fourier_transform", _child_payload(child_args, meta))
+
+@mcp.tool()
+async def power_spectrum(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    args, meta = _split_payload(payload)
+    child_args = {
+        "signal": args.get("signal"),
+        "sample_rate": args.get("sample_rate", 1.0),
+        "window": args.get("window", "rect"),
+        "only_positive": args.get("only_positive", True),
+    }
+    return await manager.call_tool("fourier", "power_spectrum", _child_payload(child_args, meta))
 
 @mcp.tool()
 async def list_child_tools(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:

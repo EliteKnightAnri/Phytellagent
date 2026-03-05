@@ -93,6 +93,8 @@ class ChatSession:
             {'id': 'pandas', 'name': 'pandas_tool', 'url': 'mcp_service/tools/pandas_tool.py', 'selected': True},
             {'id': 'least_square', 'name': 'least_square_tool', 'url': 'mcp_service/tools/least_square_tool.py', 'selected': True},
             {'id': 'file_convert', 'name': 'file_convert_tool', 'url': 'mcp_service/tools/file_convert_tool.py', 'selected': True},
+            {'id': 'differential_equations', 'name': 'differential_equations_tool', 'url': 'mcp_service/tools/differential_equations_tool.py', 'selected': True},
+            {'id': 'fourier', 'name': 'fourier_tool', 'url': 'mcp_service/tools/fourier_tool.py', 'selected': True},
         ]
         self.mcp_dialog = None
 
@@ -791,6 +793,10 @@ class ChatSession:
     # 点击发送按钮事件函数
     async def handle_click(self):
         if self.generating:
+            if self.agent_mode:
+                # Agent 调用需要等待后端返回结果，禁止再次点击导致的 HTTP 取消
+                ui.notify("Agent 正在处理，请稍候...", type='info', timeout=1200)
+                return
             self.stop_flag = True
             ui.notify("已停止生成", position='top',timeout=100)
             return

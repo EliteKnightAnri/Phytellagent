@@ -233,6 +233,111 @@ TOOL_SCHEMAS = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "euler_diff_solver",
+            "description": "Solve a first-order ordinary differential equation using Euler's method based on a provided function string and initial conditions.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "diff_equation": {"type": "string", "description": "A string representation of the differential equation, e.g. 'dy/dx = a*x + b*y'."},
+                    "x0": {"type": "number", "description": "Initial value of the independent variable x, default 0."},
+                    "y0": {"type": "number", "description": "Initial value of the dependent variable y, default 1."},
+                    "x_end": {"type": "number", "description": "End value of x for the solution, default 10."},
+                    "step": {"type": "number", "description": "Step size for Euler's method, default 0.1."}
+                },
+                "required": ["diff_equation"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "trapezoidal_diff_solver",
+            "description": "Solve a first-order ordinary differential equation using the trapezoidal method based on a provided function string and initial conditions.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "diff_equation": {"type": "string", "description": "A string representation of the differential equation, e.g. 'dy/dx = a*x + b*y'."},
+                    "x0": {"type": "number", "description": "Initial value of the independent variable x, default 0."},
+                    "y0": {"type": "number", "description": "Initial value of the dependent variable y, default 1."},
+                    "x_end": {"type": "number", "description": "End value of x for the solution, default 10."},
+                    "step": {"type": "number", "description": "Step size for the trapezoidal method, default 0.1."},
+                    "eps": {"type": "number", "description": "Convergence threshold for iterative solution, default 1e-6."}
+                },
+                "required": ["diff_equation"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "fourier_transform",
+            "description": "Compute the Fourier transform of a 1D signal with optional parameters for normalization, windowing, and frequency axis calculation.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "signal": {"type": "array", "items": {"type": "number"}, "description": "Input 1D signal data."},
+                    "sample_rate": {"type": "number", "description": "Sampling rate of the signal for accurate frequency axis calculation."},
+                    "window": {"type": ["string", "array"], "description": "Optional window type (e.g. 'hann', 'hamming') or custom window array to apply to the signal."},
+                    "normalize": {"type": "boolean", "description": "Whether to normalize the Fourier transform by the signal length, default false."}
+                },
+                "required": ["signal"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "inverse_fourier_transform",
+            "description": "Compute the inverse Fourier transform of a spectrum with optional parameters for normalization and windowing.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "real": {"type": "array", "items": {"type": "number"}, "description": "Real part of the input spectrum."},
+                    "imag": {"type": "array", "items": {"type": "number"}, "description": "Imaginary part of the input spectrum."},
+                    "normalize": {"type": "boolean", "description": "Whether to normalize the inverse transform by the signal length, default false."},
+                },
+                "required": ["real", "imag"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "power_spectrum",
+            "description": "Compute the power spectrum of a 1D signal with optional parameters for windowing and frequency axis calculation.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "signal": {"type": "array", "items": {"type": "number"}, "description": "Input 1D signal data."},
+                    "sample_rate": {"type": "number", "description": "Sampling rate of the signal for accurate frequency axis calculation."},
+                    "window": {"type": ["string", "array"], "description": "Optional window type (e.g. 'hann', 'hamming') or custom window array to apply to the signal."},
+                    "only_positive": {"type": "boolean", "description": "Whether to return only positive frequencies, default true."}
+                },
+                "required": ["signal"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "short_time_fourier_transform",
+            "description": "Compute the short-time Fourier transform (STFT) of a 1D signal with parameters for window size, hop length, and windowing.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "signal": {"type": "array", "items": {"type": "number"}, "description": "Input 1D signal data."},
+                    "window_size": {"type": "integer", "description": "Size of the window to use for each STFT frame, default 256."},
+                    "hop_length": {"type": "integer", "description": "Hop length between successive STFT frames, default window_size // 4 or 1."},
+                    "window": {"type": ["string", "array"], "description": "Optional window type (e.g. 'hann', 'hamming') or custom window array to apply to each STFT frame."},
+                    "sample_rate": {"type": "number", "description": "Sampling rate of the signal for accurate frequency axis calculation."}
+                },
+                "required": ["signal"],
+            },
+        },
+    },
 ]
 
 

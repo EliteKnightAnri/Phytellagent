@@ -1,3 +1,4 @@
+import asyncio
 import httpx
 import json
 import inspect  # 用于判断异步方法
@@ -213,9 +214,11 @@ class BackendClient:
         if api_key:
             headers["X-API-Key"] = api_key
         try:
-            async with httpx.AsyncClient(timeout=60.0, trust_env=False) as client:
+            async with httpx.AsyncClient(timeout=None, trust_env=False) as client:
                 resp = await client.post(f"{self.base_url}/agent/ask", json=payload, headers=headers)
                 return resp.json()
+        except asyncio.CancelledError:
+            raise
         except Exception as e:
             return {"status": "error", "message": str(e)}
 
