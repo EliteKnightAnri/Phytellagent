@@ -1,6 +1,7 @@
 import json
 import asyncio
 import os
+import logging
 from pathlib import Path
 from typing import Dict, Any, Optional, List
 import subprocess
@@ -22,6 +23,9 @@ agent = AsyncOpenAI(
 )
 
 tools = get_tool_schemas()
+logger = logging.getLogger(__name__)
+if not logger.handlers:
+    logging.basicConfig(level=logging.INFO)
 
 
 def _normalize_content(content: Any) -> Optional[str]:
@@ -85,6 +89,13 @@ async def call_tool(client: Client, function_name: str, function_args: Dict[str,
     if user_prompt:
         payload["meta"]["prompt"] = user_prompt
 
+    logger.info(
+        "[call_tool] name=%s args=%s meta_keys=%s",
+        function_name,
+        json.dumps(args, ensure_ascii=False),
+        list(payload.get("meta", {}).keys()),
+    )
+
     result = await client.call_tool(function_name, {"payload": payload})
 
     try:
@@ -95,6 +106,13 @@ async def call_tool(client: Client, function_name: str, function_args: Dict[str,
         elif hasattr(result, "content"):
             result = json.loads(result.content[0].text)
 
+    logger.info(
+        "[call_tool_result] name=%s status=%s keys=%s",
+        function_name,
+        (result or {}).get("status"),
+        list((result or {}).keys()),
+    )
+
     return result
 
 
@@ -104,7 +122,7 @@ async def ai_agent(client: Client, user_input: str) -> str:
             "role": "system",
             "content": (
                 "你是一个 AI Agent，可以调用 MCP 工具获取实时信息。"
-                "凡是涉及本机环境、系统信息、磁盘状态、B 站检索或数据库访问时，一定要优先调用对应工具，不要凭空回答。"
+                "当导入的工具返回内存地址data_address时，绘图、拟合等需要大量数据的工具需传入该内存地址和列名。"
             ),
         },
         {"role": "user", "content": user_input},

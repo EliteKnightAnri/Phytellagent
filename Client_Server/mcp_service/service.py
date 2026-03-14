@@ -167,6 +167,20 @@ async def import_csv(payload: Optional[Dict[str, Any]] = None) -> Any:
     }
     return await manager.call_tool("pandas", "import_csv", _child_payload(child_args, meta))
 
+@mcp.tool()
+async def import_excel(payload: Optional[Dict[str, Any]] = None) -> Any:
+    args, meta = _split_payload(payload)
+    child_args = {
+        "file_path": args.get("file_path"),
+        "sheet_name": args.get("sheet_name", 0),
+        "header": args.get("header"),
+        "encoding": args.get("encoding", "utf-8"),
+        "dtype": args.get("dtype"),
+        "parse_dates": args.get("parse_dates"),
+        "index_col": args.get("index_col"),
+        "usecols": args.get("usecols"),
+    }
+    return await manager.call_tool("pandas", "import_excel", _child_payload(child_args, meta))
 
 @mcp.tool()
 async def least_square_fit_2d(payload: Optional[Dict[str, Any]] = None) -> Any:
@@ -174,6 +188,11 @@ async def least_square_fit_2d(payload: Optional[Dict[str, Any]] = None) -> Any:
     child_args = {
         "x_data": args.get("x_data") or [],
         "y_data": args.get("y_data") or [],
+        "data_address": args.get("data_address"),
+        "x_data_address": args.get("x_data_address"),
+        "y_data_address": args.get("y_data_address"),
+        "x_data_column": args.get("x_data_column"),
+        "y_data_column": args.get("y_data_column"),
         "model_func_str": args.get("model_func_str"),
         "initial_params": args.get("initial_params"),
     }
@@ -187,6 +206,13 @@ async def least_square_fit_3d(payload: Optional[Dict[str, Any]] = None) -> Any:
         "x_data": args.get("x_data") or [],
         "y_data": args.get("y_data") or [],
         "z_data": args.get("z_data") or [],
+        "data_address": args.get("data_address"),
+        "x_data_address": args.get("x_data_address"),
+        "y_data_address": args.get("y_data_address"),
+        "z_data_address": args.get("z_data_address"),
+        "x_data_column": args.get("x_data_column"),
+        "y_data_column": args.get("y_data_column"),
+        "z_data_column": args.get("z_data_column"),
         "model_func_str": args.get("model_func_str"),
         "initial_params": args.get("initial_params"),
     }
@@ -198,6 +224,9 @@ async def generate_pred_values_2d(payload: Optional[Dict[str, Any]] = None) -> A
     args, meta = _split_payload(payload)
     child_args = {
         "x_data": args.get("x_data") or [],
+        "data_address": args.get("data_address"),
+        "x_data_address": args.get("x_data_address"),
+        "x_data_column": args.get("x_data_column"),
         "model_func_str": args.get("model_func_str"),
         "params": args.get("params"),
     }
@@ -210,6 +239,11 @@ async def generate_pred_values_3d(payload: Optional[Dict[str, Any]] = None) -> A
     child_args = {
         "x_data": args.get("x_data") or [],
         "y_data": args.get("y_data") or [],
+        "data_address": args.get("data_address"),
+        "x_data_address": args.get("x_data_address"),
+        "y_data_address": args.get("y_data_address"),
+        "x_data_column": args.get("x_data_column"),
+        "y_data_column": args.get("y_data_column"),
         "model_func_str": args.get("model_func_str"),
         "params": args.get("params"),
     }
@@ -222,6 +256,11 @@ async def plot_in_2d(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]
     child_args = {
         "x_data": args.get("x_data") or [],
         "y_data": args.get("y_data") or [],
+        "data_address": args.get("data_address"),
+        "x_data_address": args.get("x_data_address"),
+        "y_data_address": args.get("y_data_address"),
+        "x_data_column": args.get("x_data_column"),
+        "y_data_column": args.get("y_data_column"),
         "title": args.get("title", "2D Figure"),
         "x_label": args.get("x_label", "X-Axis"),
         "y_label": args.get("y_label", "Y-Axis"),
@@ -237,6 +276,13 @@ async def plot_in_3d(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]
         "x_data": args.get("x_data") or [],
         "y_data": args.get("y_data") or [],
         "z_data": args.get("z_data") or [],
+        "data_address": args.get("data_address"),
+        "x_data_address": args.get("x_data_address"),
+        "y_data_address": args.get("y_data_address"),
+        "z_data_address": args.get("z_data_address"),
+        "x_data_column": args.get("x_data_column"),
+        "y_data_column": args.get("y_data_column"),
+        "z_data_column": args.get("z_data_column"),
         "title": args.get("title", "3D Figure"),
         "x_label": args.get("x_label", "X-Axis"),
         "y_label": args.get("y_label", "Y-Axis"),
@@ -254,6 +300,15 @@ async def double_plot_2d(payload: Optional[Dict[str, Any]] = None) -> Dict[str, 
         "y1_data": args.get("y1_data") or [],
         "x2_data": args.get("x2_data") or [],
         "y2_data": args.get("y2_data") or [],
+        "data_address": args.get("data_address"),
+        "x1_data_address": args.get("x1_data_address"),
+        "y1_data_address": args.get("y1_data_address"),
+        "x2_data_address": args.get("x2_data_address"),
+        "y2_data_address": args.get("y2_data_address"),
+        "x1_data_column": args.get("x1_data_column") or args.get("x_data_column"),
+        "y1_data_column": args.get("y1_data_column") or args.get("y_data_column"),
+        "x2_data_column": args.get("x2_data_column"),
+        "y2_data_column": args.get("y2_data_column"),
         "title": args.get("title", "Double 2D Figure"),
         "x_label": args.get("x_label", "X-Axis"),
         "y_label": args.get("y_label", "Y-Axis"),
@@ -272,6 +327,19 @@ async def double_plot_3d(payload: Optional[Dict[str, Any]] = None) -> Dict[str, 
         "x2_data": args.get("x2_data") or [],
         "y2_data": args.get("y2_data") or [],
         "z2_data": args.get("z2_data") or [],
+        "data_address": args.get("data_address"),
+        "x1_data_address": args.get("x1_data_address"),
+        "y1_data_address": args.get("y1_data_address"),
+        "z1_data_address": args.get("z1_data_address"),
+        "x2_data_address": args.get("x2_data_address"),
+        "y2_data_address": args.get("y2_data_address"),
+        "z2_data_address": args.get("z2_data_address"),
+        "x1_data_column": args.get("x1_data_column"),
+        "y1_data_column": args.get("y1_data_column"),
+        "z1_data_column": args.get("z1_data_column"),
+        "x2_data_column": args.get("x2_data_column"),
+        "y2_data_column": args.get("y2_data_column"),
+        "z2_data_column": args.get("z2_data_column"),
         "title": args.get("title", "Double 3D Figure"),
         "x_label": args.get("x_label", "X-Axis"),
         "y_label": args.get("y_label", "Y-Axis"),

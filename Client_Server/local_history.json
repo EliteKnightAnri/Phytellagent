@@ -1,305 +1,33 @@
 {
-  "active_id": "d88ed88c-4c5b-44cb-b3f7-7d29f3584466",
+  "active_id": "fdbd755e-53ad-436b-a0e9-746afba204fb",
   "history": [
     {
-      "id": "d88ed88c-4c5b-44cb-b3f7-7d29f3584466",
-      "title": "这台电脑的CPU有几个核呀？",
+      "id": "fdbd755e-53ad-436b-a0e9-746afba204fb",
+      "title": "示例对话",
       "messages": [
         {
           "role": "assistant",
-          "content": "👋 **你好！我是聪明的智能助手。**",
+          "content": "👋 **你好！我是你的智能助手。",
           "attachments": []
         },
         {
           "role": "user",
-          "content": "这台电脑的CPU有几个核呀？",
+          "content": "你好呀",
           "attachments": []
         },
         {
           "role": "assistant",
-          "content": "{\n  \"content\": [\n    {\n      \"type\": \"text\",\n      \"text\": \"{\\\"result\\\":{\\\"os\\\":\\\"Windows\\\",\\\"os_version\\\":\\\"10.0.26100\\\",\\\"architecture\\\":\\\"AMD64\\\",\\\"cpu_count\\\":16,\\\"memory_total_gb\\\":15.19,\\\"disk_total_gb\\\":50.0,\\\"hostname\\\":\\\"pythonic36\\\",\\\"python_version\\\":\\\"3.11.14\\\"}}\",\n      \"annotations\": null,\n      \"_meta\": null\n    }\n  ],\n  \"structured_content\": {\n    \"result\": {\n      \"os\": \"Windows\",\n      \"os_version\": \"10.0.26100\",\n      \"architecture\": \"AMD64\",\n      \"cpu_count\": 16,\n      \"memory_total_gb\": 15.19,\n      \"disk_total_gb\": 50.0,\n      \"hostname\": \"pythonic36\",\n      \"python_version\": \"3.11.14\"\n    }\n  },\n  \"meta\": null,\n  \"data\": {\n    \"result\": {\n      \"os\": \"Windows\",\n      \"os_version\": \"10.0.26100\",\n      \"architecture\": \"AMD64\",\n      \"cpu_count\": 16,\n      \"memory_total_gb\": 15.19,\n      \"disk_total_gb\": 50.0,\n      \"hostname\": \"pythonic36\",\n      \"python_version\": \"3.11.14\"\n    }\n  },\n  \"is_error\": false\n}",
-          "attachments": []
-        },
-        {
-          "role": "user",
-          "content": "你是谁呀？",
-          "attachments": []
-        },
-        {
-          "role": "assistant",
-          "content": "😎 **开始思考 **\n\n你好！我是你的学习助手，专注于物理学及相关领域。如果你对物理学家、物理理论、科学史或任何与物理相关的问题感兴趣，我可以为你提供清晰、可靠的信息和解答。无论是牛顿、爱因斯坦，还是现代物理学的前沿话题，都可以随时问我！ 😊",
-          "attachments": []
-        },
-        {
-          "role": "user",
           "content": "你好！",
           "attachments": []
         },
         {
-          "role": "assistant",
-          "content": "",
-          "attachments": []
-        },
-        {
           "role": "user",
-          "content": "这台电脑的CPU有几个核？",
+          "content": "如何学好物理",
           "attachments": []
         },
         {
           "role": "assistant",
-          "content": "[错误] All connection attempts failed",
-          "attachments": []
-        },
-        {
-          "role": "user",
-          "content": "查查这台电脑的CPU核数",
-          "attachments": []
-        },
-        {
-          "role": "assistant",
-          "content": "[错误] Specify server and tool, or enable automatic tool selection in the backend.",
-          "attachments": []
-        },
-        {
-          "role": "user",
-          "content": "查查这台电脑的CPU核数",
-          "attachments": []
-        },
-        {
-          "role": "assistant",
-          "content": "[错误] 1 validation error for call[get_system_info]\nkey\n  Unexpected keyword argument [type=unexpected_keyword_argument, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.12/v/unexpected_keyword_argument",
-          "attachments": []
-        },
-        {
-          "role": "user",
-          "content": "查查这台电脑的CPU核数",
-          "attachments": []
-        },
-        {
-          "role": "assistant",
-          "content": "{\n  \"content\": [\n    {\n      \"type\": \"text\",\n      \"text\": \"{\\\"status\\\":\\\"success\\\",\\\"data\\\":{\\\"os\\\":\\\"Windows\\\",\\\"os_version\\\":\\\"10.0.26100\\\",\\\"architecture\\\":\\\"AMD64\\\",\\\"cpu_count\\\":16,\\\"memory_total_gb\\\":15.19,\\\"disk_total_gb\\\":50.0,\\\"hostname\\\":\\\"pythonic36\\\",\\\"python_version\\\":\\\"3.11.14\\\"}}\",\n      \"annotations\": null,\n      \"_meta\": null\n    }\n  ],\n  \"structured_content\": {\n    \"status\": \"success\",\n    \"data\": {\n      \"os\": \"Windows\",\n      \"os_version\": \"10.0.26100\",\n      \"architecture\": \"AMD64\",\n      \"cpu_count\": 16,\n      \"memory_total_gb\": 15.19,\n      \"disk_total_gb\": 50.0,\n      \"hostname\": \"pythonic36\",\n      \"python_version\": \"3.11.14\"\n    }\n  },\n  \"meta\": null,\n  \"data\": {\n    \"status\": \"success\",\n    \"data\": {\n      \"os\": \"Windows\",\n      \"os_version\": \"10.0.26100\",\n      \"architecture\": \"AMD64\",\n      \"cpu_count\": 16,\n      \"memory_total_gb\": 15.19,\n      \"disk_total_gb\": 50.0,\n      \"hostname\": \"pythonic36\",\n      \"python_version\": \"3.11.14\"\n    }\n  },\n  \"is_error\": false\n}",
-          "attachments": []
-        },
-        {
-          "role": "user",
-          "content": "查查生化危机4再生者相关的视频",
-          "attachments": []
-        },
-        {
-          "role": "assistant",
-          "content": "[错误] Error calling tool 'search_videos': Connection closed",
-          "attachments": []
-        }
-      ],
-      "session_file_ids": []
-    },
-    {
-      "id": "4fcd88ac-f58a-44ab-bd5e-24a90d427e92",
-      "title": "你好",
-      "messages": [
-        {
-          "role": "assistant",
-          "content": "👋 **你好！我是聪明的智能助手。**",
-          "attachments": []
-        },
-        {
-          "role": "user",
-          "content": "你好",
-          "attachments": []
-        },
-        {
-          "role": "assistant",
-          "content": "😎 **开始思考 **\n\n你好！我是你的物理学习助手，专注于物理学家生平、科学贡献以及相关物理知识的解答。如果你有关于物理学家、物理理论、历史背景或任何与物理相关的问题，欢迎随时提问！我会尽力提供清晰、可靠的回答。😊",
-          "attachments": []
-        },
-        {
-          "role": "user",
-          "content": "小王子是谁",
-          "attachments": []
-        },
-        {
-          "role": "assistant",
-          "content": "🔍 **正在检索知识库...**\n\n根据提供的Context信息，小王子是一个来自其他宇宙的高维生物。",
-          "attachments": []
-        },
-        {
-          "role": "user",
-          "content": "这个文件里是什么内容",
-          "attachments": [
-            {
-              "file_id": "2c4006cb-a3e5-4947-9d27-72209e4bd469",
-              "filename": "3c434251-84ce-41b8-9102-1f80eea76a17__测试.docx"
-            }
-          ]
-        },
-        {
-          "role": "assistant",
-          "content": "😎 **开始思考 **\n\n根据您提供的附件内容，这份文档（测试.docx）是一篇介绍著名物理学家**沃尔夫冈·泡利**的生平、性格特点和科学贡献的科普文章。\n\n文章的主要内容结构如下：\n\n1.  **天才的诞生与早期成就**\n    *   指出泡利出生于1900年，与量子论诞生同年。\n    *   介绍了其优越的家庭背景（父亲是化学家，教父是物理学家兼哲学家恩斯特·马赫）。\n    *   详述了其少年早慧：中学读爱因斯坦相对论，高中完成三篇广义相对论论文。\n    *   重点描述了他在21岁时，应导师索末菲之邀，在两个月内撰写了一篇长达237页、包含349条脚注的相对论评述文章，该文获得了爱因斯坦本人的高度赞誉。\n\n2.  **“上帝之鞭”与“毒舌之王”**\n    *   解释了泡利因其尖锐、不留情面的批评风格而获得的外号“The God‘s Whip”（上帝之鞭）。\n    *   通过多个生动轶事展现其“毒舌”属性：\n        *   批评物理学家塞格雷的报告“糟糕”。\n        *   评价爱因斯坦的讲座“也不是那么愚蠢”。\n        *   评价学生的论文“这不对，这连错都算不上”（Not even wrong）。\n    *   也提到他对少数人（如爱因斯坦、玻尔、导师索末菲）保持敬重。\n\n3.  **神秘的“泡利效应”**\n    *   描述了一种围绕泡利的趣闻：他在场时，实验设备容易莫名失灵。\n    *   提及他的朋友、实验物理学家奥托·斯特恩因此禁止他进入实验室。\n    *   提到泡利本人对此现象感兴趣，并与心理学家卡尔·荣格保持长期交流与合作。\n\n4.  **科学贡献与晚年**\n    *   列举了他曾反对但后来被证实的理论：电子自旋假说、宇称不守恒（特别提到了他最初反对吴健雄等人的实验，但结果公布后幽默地承认了错误）。\n    *   强调其最伟大的贡献——**泡利不相容原理**，并指出这是理解物质结构和化学的基础。\n    *   记载了他于1958年因胰腺癌去世，享年58岁。\n    *   文章最终给予他高度评价，称其为量子力学时代“最耀眼的明星”之一。\n\n**总结来说**，这份文件通过结合严谨的科学贡献和富有趣味性的个人轶事，塑造了沃尔夫冈·泡利作为一个绝世天才、严厉批评者、带有神秘色彩的复杂而鲜活的科学家形象。",
-          "attachments": []
-        },
-        {
-          "role": "user",
-          "content": "评价一下写得怎么样",
-          "attachments": []
-        },
-        {
-          "role": "assistant",
-          "content": "😎 **开始思考 **\n\n这篇关于沃尔夫冈·泡利的介绍写得非常出色，它成功地将一位复杂而传奇的物理学家形象生动、立体地呈现给了读者。以下是我的具体评价：\n\n### **优点：**\n1.  **结构清晰，引人入胜**：文章从“天才”与“魔王”这对看似矛盾的头衔切入，迅速抓住了读者的好奇心。随后按照生平、性格特质（毒舌）、轶事（泡利效应）、科学贡献与遗憾、最终评价的逻辑展开，叙事流畅，节奏得当。\n2.  **人物刻画鲜明生动**：文章没有停留在干巴巴的成就罗列上，而是通过大量生动的轶事和引语，让泡利“毒舌”、“完美主义”、“敬畏导师”等多面性格跃然纸上。\n    *   **“毒舌”形象**：通过评价塞格雷的报告、调侃好友、让爱因斯坦“提前做好心理准备”以及“连错都算不上”等经典段子，极具说服力和趣味性。\n    *   **“泡利效应”**：这个部分的加入非常巧妙，为这位理论物理学家的传奇色彩增添了幽默和超自然的一笔，使其形象更加独特和令人难忘。\n3.  **科学贡献与人文结合**：文章在讲述故事的同时，自然地融入了他的核心科学贡献（如泡利不相容原理），并提及了他的失误（对电子自旋和宇称不守恒的怀疑），以及他面对错误时的幽默与豁达（“损失一点名誉也无所谓”）。这使得人物更加真实、丰满，而非一个完美的“神”。\n4.  **语言风格活泼且富有文采**：使用了“怼天怼地怼空气”、“闷骚的金牛理工男”、“上帝拿个小皮鞭抽你”等网络化和形象化的表达，拉近了与当代读者的距离。开头和结尾的总结性语句（如“天才人物就像流星一样…”）也富有感染力。\n\n### **可以补充或深化的地方（基于附件信息）：**\n虽然文章已经很完整，但如果想更深入，可以考虑补充以下几点：\n1.  **“作为物理学家比爱因斯坦更伟大”的出处**：附件结尾提到这是一位“作为物理学家比爱因斯坦更伟大”的人。如果能点明这个评价的来源（是哪位科学同行的观点？），会使其更具分量，也避免显得是作者的主观断言。\n2.  **与玻尔、索末菲关系的具体例子**：文章提到泡利对爱因斯坦、玻尔和索末菲极其敬重，并描述了与索末菲会面时的恭敬。如果能补充一两个他与玻尔之间互动的小故事（哪怕是争论），能更好地印证这种“敬重”的特殊性，与他对待其他人的“毒舌”形成更鲜明的对比。\n3.  **与荣格合作的细节**：提到泡利与心理学家荣格的紧密联系是文章的一个亮点，暗示了他思想的深度和复杂性。如果能简要提及他们的合作如何“对彼此的研究做出了双向性的深刻影响”（例如，泡利对荣格的“共时性”概念有何贡献或启发），会让人物层次更丰富。\n\n### **总体评价：**\n这是一篇**优秀的人物科普短文**。它成功地在有限的篇幅内，将沃尔夫冈·泡利这位科学巨匠的**天才、苛刻、幽默、传奇乃至人性弱点**融合在一起，塑造了一个令人过目难忘的形象。文章不仅传播了科学知识，更传递了科学文化中的人物魅力与精神，可读性极强。\n\n**结论**：写得非常精彩，是一篇能有效激发读者对物理学和科学史兴趣的成功之作。",
-          "attachments": []
-        },
-        {
-          "role": "user",
-          "content": "知识库里有相关的描写吗",
-          "attachments": []
-        },
-        {
-          "role": "assistant",
-          "content": "🔍 **正在检索知识库...**\n\n根据您提供的Context信息，其中没有关于“小王子”是“来自其他宇宙的高维生物”的相关描写。Context中的段落主要描述了小王子与扳道工的对话，以及小王子倒地时的场景。",
-          "attachments": []
-        },
-        {
-          "role": "user",
-          "content": "现在呢，知识库有对话相关的描写吗",
-          "attachments": []
-        },
-        {
-          "role": "assistant",
-          "content": "🔍 **正在检索知识库...**\n\n根据您提供的Context，其中没有关于“对话相关描写”的具体信息。Context中主要介绍了泡利的生平、性格特点、学术成就以及一些轶事，但没有涉及任何具体的对话场景或描写。\n\n如果您需要了解关于泡利或小王子的其他信息，可以随时提出。",
-          "attachments": []
-        },
-        {
-          "role": "user",
-          "content": "现在呢",
-          "attachments": []
-        },
-        {
-          "role": "assistant",
-          "content": "🔍 **正在检索知识库...**\n\n根据您提供的Context，我无法回答“现在呢”这个问题。Context中只包含了一段关于物理学家沃尔夫冈·泡利的背景介绍，以及一段关于“小王子”的文学性描述，并没有提及任何与“现在”相关的具体事件、状态或后续发展。\n\n如果您想了解泡利或小王子的其他信息，或者您的问题是基于其他背景，请提供更详细的信息，以便我能更好地为您提供帮助。",
-          "attachments": []
-        },
-        {
-          "role": "user",
-          "content": "泡利是谁",
-          "attachments": []
-        },
-        {
-          "role": "assistant",
-          "content": "🔍 **正在检索知识库...**\n\n根据您提供的附件内容，泡利是指**沃尔夫冈·泡利**，一位出生于1900年的奥地利理论物理学家。他是量子力学领域的奠基人之一，以其卓越的才华和尖锐的批评风格而闻名。\n\n**主要特点包括：**\n1.  **天才成就**：21岁时撰写了关于相对论的权威评述，受到爱因斯坦高度赞扬；提出了**泡利不相容原理**，这是理解原子结构和化学的基础。\n2.  **“毒舌”与“上帝之鞭”**：以对同行研究苛刻、直接的批评而著称，常令其他物理学家“闻之丧胆”。\n3.  **“泡利效应”**：一个戏称，指他在场时实验设备容易莫名出故障的轶事。\n4.  **重要关系**：敬重爱因斯坦、玻尔和导师索末菲，与心理学家荣格有深入交流。\n\n他于1958年去世，被认为是量子力学时代最耀眼的物理学家之一。\n\n（如果您询问的“泡利”并非指这位物理学家，请提供更多上下文，以便我给出更准确的回答。）",
-          "attachments": []
-        },
-        {
-          "role": "user",
-          "content": "你是谁？",
-          "attachments": []
-        },
-        {
-          "role": "assistant",
-          "content": "😎 **开始思考 **\n\n你好！我是你的专业学习助手，专注于物理及相关领域。如果你对物理学家、物理理论、科学史或任何与物理相关的问题感兴趣，我可以为你提供清晰、可靠且结构化的解答。无论是牛顿、爱因斯坦的贡献，还是量子力学、相对论的细节，都可以随时问我！ 😊",
-          "attachments": []
-        },
-        {
-          "role": "user",
-          "content": "你能调用工具帮我查一下这台电脑的Python是什么版本的吗？",
-          "attachments": []
-        },
-        {
-          "role": "assistant",
-          "content": "😎 **开始思考 **\n\n我目前无法直接调用工具来检查您电脑上的Python版本，但您可以按照以下步骤自行查看：\n\n### 方法一：通过命令行（通用）\n1. 打开终端（Mac/Linux）或命令提示符（Windows）\n2. 输入以下命令之一：\n   ```bash\n   python --version\n   ```\n   或\n   ```bash\n   python3 --version\n   ```\n3. 按回车键，系统会显示类似 `Python 3.9.7` 的版本信息。\n\n### 方法二：在Python交互环境中查看\n1. 打开命令行，输入 `python` 或 `python3` 进入交互模式\n2. 输入：\n   ```python\n   import sys\n   print(sys.version)\n   ```\n3. 会显示更详细的版本信息。\n\n### 提示：\n- 如果提示“命令未找到”，可能需要将Python添加到系统环境变量，或检查是否已安装Python。\n- 某些系统可能同时安装了Python 2和Python 3，建议使用 `python3` 命令明确指定版本。\n\n如果您在操作中遇到具体问题，可以告诉我您的操作系统（Windows/Mac/Linux），我可以提供更针对性的指导！",
-          "attachments": []
-        },
-        {
-          "role": "user",
-          "content": "帮我查一下这台电脑的PYTHON版本",
-          "attachments": []
-        },
-        {
-          "role": "assistant",
-          "content": "[错误] Specify server and tool, or enable automatic tool selection in the backend.",
-          "attachments": []
-        },
-        {
-          "role": "user",
-          "content": "查找生化危机2相关的视频",
-          "attachments": []
-        },
-        {
-          "role": "assistant",
-          "content": "[错误] Specify server and tool, or enable automatic tool selection in the backend.",
-          "attachments": []
-        },
-        {
-          "role": "user",
-          "content": "查找生化危机2的视频",
-          "attachments": []
-        },
-        {
-          "role": "assistant",
-          "content": "[错误] Specify server and tool, or enable automatic tool selection in the backend.",
-          "attachments": []
-        },
-        {
-          "role": "user",
-          "content": "查查这台电脑的Python版本",
-          "attachments": []
-        },
-        {
-          "role": "assistant",
-          "content": "[错误] 1 validation error for call[get_system_info]\nprompt\n  Unexpected keyword argument [type=unexpected_keyword_argument, input_value='查查这台电脑的Python版本', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/unexpected_keyword_argument",
-          "attachments": []
-        },
-        {
-          "role": "user",
-          "content": "帮我查一下生化危机2的热门视频",
-          "attachments": []
-        },
-        {
-          "role": "assistant",
-          "content": "[错误] 2 validation errors for call[search_videos]\nkeyword\n  Missing required argument [type=missing_argument, input_value={'prompt': '帮我查一...危机2的热门视频'}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing_argument\nprompt\n  Unexpected keyword argument [type=unexpected_keyword_argument, input_value='帮我查一下生化危机2的热门视频', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/unexpected_keyword_argument",
-          "attachments": []
-        },
-        {
-          "role": "user",
-          "content": "这个文章讲了什么呀？",
-          "attachments": [
-            {
-              "file_id": "4a4b94df-85ad-4a6b-9272-75b7e596e298",
-              "filename": "Transformer&MCP.docx"
-            }
-          ]
-        },
-        {
-          "role": "assistant",
-          "content": "😎 **开始思考 **\n\n这篇文章主要介绍了 **Transformer 架构** 及其相关技术背景和应用，内容可以概括为以下几个核心部分：\n\n---\n\n### 1. **Transformer 的提出背景**\n- **Seq2Seq（序列到序列）模型**：用于处理输入和输出长度不确定的任务（如机器翻译）。\n- **传统的 Encoder-Decoder 结构**：早期使用 **RNN（循环神经网络）** 实现，但存在两大缺陷：\n  - **长文本处理困难**：容易出现梯度消失或爆炸，难以捕捉远距离依赖（例如例子中“前端开发”与“编程语言”的关联被中间信息干扰）。\n  - **无法并行计算**：必须按顺序逐步处理序列，效率低下。\n\n---\n\n### 2. **Transformer 的核心机制**\n- **Self-Attention（自注意力）**：  \n  Transformer 的核心创新，通过并行计算解决 RNN 的缺陷。其过程包括：\n  1. 将输入序列的每个语义向量转换为 **Query（Q）、Key（K）、Value（V）** 三个向量。\n  2. 计算每个 Query 与所有 Key 的匹配度（注意力权重），通过 Softmax 归一化为概率。\n  3. 用权重对 Value 加权求和，得到输出向量。  \n  **优势**：允许模型同时关注序列中的所有位置，高效捕捉长距离依赖（如直接关联“编程语言”和“前端开发”）。\n\n---\n\n### 3. **Transformer 与贝叶斯优化的结合**\n- **目的**：直接优化预测值与真实最优值之间的“遗憾”（Regret），而非通过传统采集函数间接优化。\n- **方法**：\n  1. 集成多个高斯过程（避免单一过程的偏差）。\n  2. 在每个过程的置信区域内模拟贝叶斯优化轨迹，生成包含“初始状态-高斯过程-模拟遗憾”的数据。\n  3. 用这些数据训练 Transformer，使其学会根据输入直接输出最优超参数配置。\n- **关键点**：Transformer 在此过程中像处理语义一样并行分析多组输入，全局评估哪些高斯过程最接近真实最优解。\n\n---\n\n### 4. **Transformer 的应用扩展：MCP 与工具调用**\n- **MCP（模型上下文协议）**：  \n  允许大语言模型（LLM）通过标准化协议调用外部工具（如数据库、建模软件）。\n  - **流程**：用户 → MCP Client → LLM → 调用工具（MCP Server）→ 返回结果。\n  - **举例**：LLM 通过 MySQL 的 MCP 工具查询数据库；通过 Blender 的 MCP 工具用自然语言生成三维模型代码。\n- **意义**：MCP 将 LLM 与具体工具解耦，拓展了其在实际任务中的能力（如数据分析、自动建模）。\n\n---\n\n### 文章主线总结\n1. **从 RNN 到 Transformer**：解释了 Transformer 如何通过自注意力机制解决序列建模的瓶颈。\n2. **Transformer 的优化能力**：探讨其与贝叶斯优化结合，直接学习优化轨迹的能力。\n3. **实践落地**：通过 MCP 协议展示 Transformer 驱动的 LLM 如何调用工具执行复杂任务。\n\n---\n\n### 附件信息充分性说明\n附件内容详细覆盖了 Transformer 的原理、技术演进及应用场景，提供了足够的解释和案例。但若需深入理解，可能需要补充：\n- 自注意力机制的具体数学公式。\n- Transformer 在训练中的具体架构（如多头注意力、位置编码）。\n- 贝叶斯优化与 Transformer 结合的实际算法细节。",
-          "attachments": []
-        },
-        {
-          "role": "user",
-          "content": "查一下生化危机2的热门视频",
-          "attachments": []
-        },
-        {
-          "role": "assistant",
-          "content": "[错误] Error calling tool 'search_videos': Connection closed",
-          "attachments": []
-        },
-        {
-          "role": "user",
-          "content": "查一下这台电脑的CPU是几个核的",
-          "attachments": []
-        },
-        {
-          "role": "assistant",
-          "content": "[错误] Unknown tool: system_info_tool",
-          "attachments": []
-        },
-        {
-          "role": "user",
-          "content": "这台电脑的CPU有几个核？",
-          "attachments": []
-        },
-        {
-          "role": "assistant",
-          "content": "{\n  \"content\": [\n    {\n      \"type\": \"text\",\n      \"text\": \"{\\\"result\\\":{\\\"os\\\":\\\"Windows\\\",\\\"os_version\\\":\\\"10.0.26100\\\",\\\"architecture\\\":\\\"AMD64\\\",\\\"cpu_count\\\":16,\\\"memory_total_gb\\\":15.19,\\\"disk_total_gb\\\":50.0,\\\"hostname\\\":\\\"pythonic36\\\",\\\"python_version\\\":\\\"3.11.14\\\"}}\",\n      \"annotations\": null,\n      \"_meta\": null\n    }\n  ],\n  \"structured_content\": {\n    \"result\": {\n      \"os\": \"Windows\",\n      \"os_version\": \"10.0.26100\",\n      \"architecture\": \"AMD64\",\n      \"cpu_count\": 16,\n      \"memory_total_gb\": 15.19,\n      \"disk_total_gb\": 50.0,\n      \"hostname\": \"pythonic36\",\n      \"python_version\": \"3.11.14\"\n    }\n  },\n  \"meta\": null,\n  \"data\": {\n    \"result\": {\n      \"os\": \"Windows\",\n      \"os_version\": \"10.0.26100\",\n      \"architecture\": \"AMD64\",\n      \"cpu_count\": 16,\n      \"memory_total_gb\": 15.19,\n      \"disk_total_gb\": 50.0,\n      \"hostname\": \"pythonic36\",\n      \"python_version\": \"3.11.14\"\n    }\n  },\n  \"is_error\": false\n}",
+          "content": "先v我50",
           "attachments": []
         }
       ],

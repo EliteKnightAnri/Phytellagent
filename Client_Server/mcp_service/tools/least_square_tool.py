@@ -5,6 +5,7 @@ from sympy.printing.pycode import pycode
 from sympy.parsing.sympy_parser import parse_expr, standard_transformations
 from typing import Any, Dict, Optional, Tuple
 from fastmcp import FastMCP
+from data_memory import data_memory
 
 mcp = FastMCP("Least Square Method Server")
 
@@ -30,6 +31,80 @@ def _error(message: str) -> Dict[str, Any]:
 
 def _success(data: Dict[str, Any]) -> Dict[str, Any]:
     return {"status": "success", "data": data}
+
+
+def _object_to_list(obj: Optional[Any]) -> Optional[list]:
+    if obj is None:
+        return None
+    try:
+        if hasattr(obj, "tolist"):
+            candidate = obj.tolist()
+        else:
+            candidate = obj
+    except Exception:
+        candidate = obj
+    return _safe_opt_to_list(candidate)
+
+
+def _extract_from_source(source: Any, column: Optional[str]) -> Optional[list]:
+    if source is None:
+        return None
+    if column is None:
+        return _object_to_list(source)
+
+    if isinstance(source, dict):
+        if column not in source:
+            return None
+        return _object_to_list(source[column])
+
+    if hasattr(source, "__getitem__"):
+        try:
+            selection = source[column]
+        except Exception:
+            return None
+        return _object_to_list(selection)
+
+    return None
+
+
+def _load_dataset(args: Dict[str, Any], meta: Dict[str, Any]) -> Tuple[Optional[Any], Optional[str]]:
+    address = args.get("data_address") or meta.get("data_address")
+    if not address:
+        return None, None
+    return data_memory.get(address), address
+
+
+def _resolve_series(name: str, args: Dict[str, Any], meta: Dict[str, Any], dataset: Optional[Any]) -> Tuple[Optional[list], Optional[str]]:
+    direct = _as_list(args.get(name)) or _as_list(meta.get(name))
+    if direct:
+        return direct, None
+
+    address = args.get(f"{name}_address") or meta.get(f"{name}_address")
+    column = args.get(f"{name}_column") or meta.get(f"{name}_column")
+    if not column and name.endswith("_data"):
+        alt = f"{name[:-5]}_column"
+        column = args.get(alt) or meta.get(alt)
+
+    if address:
+        source = data_memory.get(address)
+        if source is None:
+            return None, f"{name}_address {address} not found"
+        extracted = _extract_from_source(source, column)
+        if extracted is None:
+            if column:
+                return None, f"column '{column}' not found for {name}"
+            return None, f"{name}_address {address} does not contain compatible data"
+        return extracted, None
+
+    if column:
+        if dataset is None:
+            return None, f"data_address is required when specifying {name}_column"
+        extracted = _extract_from_source(dataset, column)
+        if extracted is None:
+            return None, f"column '{column}' not found for {name}"
+        return extracted, None
+
+    return None, None
 
 def _safe_opt_to_list(obj):
     if obj is None:
@@ -150,8 +225,16 @@ def str_to_function_3d(func_str: str = "x + y", var_name: str = "x,y"):
 @mcp.tool()
 def least_square_fit_2d(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     args, meta = _split_payload(payload)
-    x_data = _as_list(args.get("x_data"))
-    y_data = _as_list(args.get("y_data"))
+    dataset, dataset_address = _load_dataset(args, meta)
+    if dataset_address and dataset is None:
+        return _error(f"data_address {dataset_address} not found")
+
+    x_data, err = _resolve_series("x_data", args, meta, dataset)
+    if err:
+        return _error(err)
+    y_data, err = _resolve_series("y_data", args, meta, dataset)
+    if err:
+        return _error(err)
     model_func_str = args.get("model_func_str") or meta.get("model_func_str")
 
     if not x_data or not y_data:
@@ -184,9 +267,19 @@ def least_square_fit_2d(payload: Optional[Dict[str, Any]] = None) -> Dict[str, A
 @mcp.tool()
 def least_square_fit_3d(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     args, meta = _split_payload(payload)
-    x_data = _as_list(args.get("x_data"))
-    y_data = _as_list(args.get("y_data"))
-    z_data = _as_list(args.get("z_data"))
+    dataset, dataset_address = _load_dataset(args, meta)
+    if dataset_address and dataset is None:
+        return _error(f"data_address {dataset_address} not found")
+
+    x_data, err = _resolve_series("x_data", args, meta, dataset)
+    if err:
+        return _error(err)
+    y_data, err = _resolve_series("y_data", args, meta, dataset)
+    if err:
+        return _error(err)
+    z_data, err = _resolve_series("z_data", args, meta, dataset)
+    if err:
+        return _error(err)
     model_func_str = args.get("model_func_str") or meta.get("model_func_str")
 
     if not x_data or not y_data or not z_data:
@@ -219,9 +312,15 @@ def least_square_fit_3d(payload: Optional[Dict[str, Any]] = None) -> Dict[str, A
 @mcp.tool()
 def generate_pred_values_2d(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     args, meta = _split_payload(payload)
-    x_data = _as_list(args.get("x_data"))
+    dataset, dataset_address = _load_dataset(args, meta)
+    if dataset_address and dataset is None:
+        return _error(f"data_address {dataset_address} not found")
+
+    x_data, err = _resolve_series("x_data", args, meta, dataset)
+    if err:
+        return _error(err)
     model_func_str = args.get("model_func_str") or meta.get("model_func_str")
-    params = _as_list(args.get("params"))
+    params = _as_list(args.get("params") or meta.get("params"))
 
     if not x_data or not model_func_str or params is None:
         return _error("x_data, model_func_str and params are required")
@@ -234,10 +333,18 @@ def generate_pred_values_2d(payload: Optional[Dict[str, Any]] = None) -> Dict[st
 @mcp.tool()
 def generate_pred_values_3d(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     args, meta = _split_payload(payload)
-    x_data = _as_list(args.get("x_data"))
-    y_data = _as_list(args.get("y_data"))
+    dataset, dataset_address = _load_dataset(args, meta)
+    if dataset_address and dataset is None:
+        return _error(f"data_address {dataset_address} not found")
+
+    x_data, err = _resolve_series("x_data", args, meta, dataset)
+    if err:
+        return _error(err)
+    y_data, err = _resolve_series("y_data", args, meta, dataset)
+    if err:
+        return _error(err)
     model_func_str = args.get("model_func_str") or meta.get("model_func_str")
-    params = _as_list(args.get("params"))
+    params = _as_list(args.get("params") or meta.get("params"))
 
     if not x_data or not y_data or not model_func_str or params is None:
         return _error("x_data, y_data, model_func_str and params are required")
