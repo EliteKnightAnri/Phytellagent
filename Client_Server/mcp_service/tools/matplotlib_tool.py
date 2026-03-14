@@ -51,6 +51,22 @@ def _maybe_error(*lists: List[Any]) -> Optional[str]:
     return None
 
 
+def _validate_pair(x: List[Any], y: List[Any], label: str) -> Optional[str]:
+    if not x or not y:
+        return f"{label} data is empty"
+    if len(x) != len(y):
+        return f"{label} x/y length mismatch: {len(x)} vs {len(y)}"
+    return None
+
+
+def _validate_triplet(x: List[Any], y: List[Any], z: List[Any], label: str) -> Optional[str]:
+    if not x or not y or not z:
+        return f"{label} data is empty"
+    if len(x) != len(y) or len(x) != len(z):
+        return f"{label} x/y/z length mismatch: {len(x)}, {len(y)}, {len(z)}"
+    return None
+
+
 def _success(file_path: str) -> Dict[str, Any]:
     return {"status": "success", "file_path": file_path}
 
@@ -77,6 +93,24 @@ def _extract_series(source: Any, column: Optional[str]) -> Optional[List[Any]]:
             if column not in source:
                 return None
             target = source[column]
+        elif isinstance(source, (list, tuple)):
+            # 支持字典列表
+            collected: List[Any] = []
+            handled = False
+            for item in source:
+                if isinstance(item, dict) and column in item:
+                    collected.append(item[column])
+                    handled = True
+                elif hasattr(item, column):
+                    collected.append(getattr(item, column))
+                    handled = True
+                else:
+                    handled = False
+                    break
+            if handled:
+                target = collected
+            else:
+                return None
         elif hasattr(source, "__getitem__"):
             try:
                 target = source[column]
@@ -233,10 +267,19 @@ def double_plot_2d(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     if err:
         _log_debug("double_plot_2d_input_error", {"axis": "y2", "error": err, "data_address": dataset_address})
         return {"status": "error", "message": err}
-    err = _maybe_error(x1_data, y1_data, x2_data, y2_data)
+    err = _validate_pair(x1_data, y1_data, "series 1")
     if err:
-        _log_debug("double_plot_2d_validation_error", {"error": err, "lens": [len(x1_data), len(y1_data), len(x2_data), len(y2_data)], "data_address": dataset_address})
+        _log_debug("double_plot_2d_validation_error", {"error": err, "lens": [len(x1_data), len(y1_data)], "series": 1, "data_address": dataset_address})
         return {"status": "error", "message": err}
+
+    if x2_data and y2_data:
+        err = _validate_pair(x2_data, y2_data, "series 2")
+        if err:
+            _log_debug("double_plot_2d_validation_error", {"error": err, "lens": [len(x2_data), len(y2_data)], "series": 2, "data_address": dataset_address})
+            return {"status": "error", "message": err}
+    else:
+        x2_data = []
+        y2_data = []
 
     title = args.get("title") or meta.get("title") or "Double 2D Figure"
     x_label = args.get("x_label", "X-Axis")
@@ -245,7 +288,8 @@ def double_plot_2d(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
 
     plt.figure()
     plt.plot(x1_data, y1_data, marker='o', label='Set 1')
-    plt.plot(x2_data, y2_data, marker='x', label='Set 2')
+    if x2_data:
+        plt.plot(x2_data, y2_data, marker='x', linestyle='none', label='Set 2')
     plt.title(title)
     plt.xlabel(x_label)
     plt.ylabel(y_label)
@@ -288,10 +332,20 @@ def double_plot_3d(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     if err:
         _log_debug("double_plot_3d_input_error", {"axis": "z2", "error": err, "data_address": dataset_address})
         return {"status": "error", "message": err}
-    err = _maybe_error(x1_data, y1_data, z1_data, x2_data, y2_data, z2_data)
+    err = _validate_triplet(x1_data, y1_data, z1_data, "series 1")
     if err:
-        _log_debug("double_plot_3d_validation_error", {"error": err, "lens": [len(x1_data), len(y1_data), len(z1_data), len(x2_data), len(y2_data), len(z2_data)], "data_address": dataset_address})
+        _log_debug("double_plot_3d_validation_error", {"error": err, "lens": [len(x1_data), len(y1_data), len(z1_data)], "series": 1, "data_address": dataset_address})
         return {"status": "error", "message": err}
+
+    if x2_data and y2_data and z2_data:
+        err = _validate_triplet(x2_data, y2_data, z2_data, "series 2")
+        if err:
+            _log_debug("double_plot_3d_validation_error", {"error": err, "lens": [len(x2_data), len(y2_data), len(z2_data)], "series": 2, "data_address": dataset_address})
+            return {"status": "error", "message": err}
+    else:
+        x2_data = []
+        y2_data = []
+        z2_data = []
 
     title = args.get("title") or meta.get("title") or "Double 3D Figure"
     x_label = args.get("x_label", "X-Axis")
@@ -302,7 +356,8 @@ def double_plot_3d(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     ax.scatter(x1_data, y1_data, z1_data, marker='o', label='Set 1')
-    ax.scatter(x2_data, y2_data, z2_data, marker='x', label='Set 2')
+    if x2_data:
+        ax.scatter(x2_data, y2_data, z2_data, marker='x', label='Set 2')
     ax.set_title(title)
     ax.set_xlabel(x_label)
     ax.set_ylabel(y_label)

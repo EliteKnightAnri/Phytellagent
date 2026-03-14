@@ -123,6 +123,7 @@ async def ai_agent(client: Client, user_input: str) -> str:
             "content": (
                 "你是一个 AI Agent，可以调用 MCP 工具获取实时信息。"
                 "当导入的工具返回内存地址data_address时，绘图、拟合等需要大量数据的工具需传入该内存地址和列名。"
+                "如需绘制峰值/谷值，应向绘图工具传入对应的峰值/谷值数据的地址。"
             ),
         },
         {"role": "user", "content": user_input},

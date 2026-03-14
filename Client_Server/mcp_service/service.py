@@ -30,6 +30,7 @@ CHILD_SERVERS: Dict[str, Path] = {
     "least_square": TOOLS_DIR / "least_square_tool.py",
     "differential_equations": TOOLS_DIR / "differential_equations_tool.py",
     "fourier": TOOLS_DIR / "fourier_tool.py",
+    "peak_and_valley": TOOLS_DIR / "peak_tool.py",
 }
 
 mcp = FastMCP(name="Main Aggregator")
@@ -295,6 +296,14 @@ async def plot_in_3d(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]
 @mcp.tool()
 async def double_plot_2d(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     args, meta = _split_payload(payload)
+    x2_data_address = args.get("x2_data_address")
+    y2_data_address = args.get("y2_data_address")
+    x2_data_column = args.get("x2_data_column")
+    y2_data_column = args.get("y2_data_column")
+    if not x2_data_column and x2_data_address:
+        x2_data_column = "x"
+    if not y2_data_column and y2_data_address:
+        y2_data_column = "y"
     child_args = {
         "x1_data": args.get("x1_data") or [],
         "y1_data": args.get("y1_data") or [],
@@ -303,12 +312,12 @@ async def double_plot_2d(payload: Optional[Dict[str, Any]] = None) -> Dict[str, 
         "data_address": args.get("data_address"),
         "x1_data_address": args.get("x1_data_address"),
         "y1_data_address": args.get("y1_data_address"),
-        "x2_data_address": args.get("x2_data_address"),
-        "y2_data_address": args.get("y2_data_address"),
+        "x2_data_address": x2_data_address,
+        "y2_data_address": y2_data_address,
         "x1_data_column": args.get("x1_data_column") or args.get("x_data_column"),
         "y1_data_column": args.get("y1_data_column") or args.get("y_data_column"),
-        "x2_data_column": args.get("x2_data_column"),
-        "y2_data_column": args.get("y2_data_column"),
+        "x2_data_column": x2_data_column,
+        "y2_data_column": y2_data_column,
         "title": args.get("title", "Double 2D Figure"),
         "x_label": args.get("x_label", "X-Axis"),
         "y_label": args.get("y_label", "Y-Axis"),
@@ -320,6 +329,18 @@ async def double_plot_2d(payload: Optional[Dict[str, Any]] = None) -> Dict[str, 
 @mcp.tool()
 async def double_plot_3d(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     args, meta = _split_payload(payload)
+    x2_data_address = args.get("x2_data_address")
+    y2_data_address = args.get("y2_data_address")
+    z2_data_address = args.get("z2_data_address")
+    x2_data_column = args.get("x2_data_column")
+    y2_data_column = args.get("y2_data_column")
+    z2_data_column = args.get("z2_data_column")
+    if not x2_data_column and x2_data_address:
+        x2_data_column = "x"
+    if not y2_data_column and y2_data_address:
+        y2_data_column = "y"
+    if not z2_data_column and z2_data_address:
+        z2_data_column = "z"
     child_args = {
         "x1_data": args.get("x1_data") or [],
         "y1_data": args.get("y1_data") or [],
@@ -331,15 +352,15 @@ async def double_plot_3d(payload: Optional[Dict[str, Any]] = None) -> Dict[str, 
         "x1_data_address": args.get("x1_data_address"),
         "y1_data_address": args.get("y1_data_address"),
         "z1_data_address": args.get("z1_data_address"),
-        "x2_data_address": args.get("x2_data_address"),
-        "y2_data_address": args.get("y2_data_address"),
-        "z2_data_address": args.get("z2_data_address"),
+        "x2_data_address": x2_data_address,
+        "y2_data_address": y2_data_address,
+        "z2_data_address": z2_data_address,
         "x1_data_column": args.get("x1_data_column"),
         "y1_data_column": args.get("y1_data_column"),
         "z1_data_column": args.get("z1_data_column"),
-        "x2_data_column": args.get("x2_data_column"),
-        "y2_data_column": args.get("y2_data_column"),
-        "z2_data_column": args.get("z2_data_column"),
+        "x2_data_column": x2_data_column,
+        "y2_data_column": y2_data_column,
+        "z2_data_column": z2_data_column,
         "title": args.get("title", "Double 3D Figure"),
         "x_label": args.get("x_label", "X-Axis"),
         "y_label": args.get("y_label", "Y-Axis"),
@@ -416,6 +437,38 @@ async def power_spectrum(payload: Optional[Dict[str, Any]] = None) -> Dict[str, 
         "only_positive": args.get("only_positive", True),
     }
     return await manager.call_tool("fourier", "power_spectrum", _child_payload(child_args, meta))
+
+@mcp.tool()
+async def detect_peaks(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    args, meta = _split_payload(payload)
+    child_args = {
+        "data_address": args.get("data_address"),
+        "x_data": args.get("x_data") or [],
+        "y_data": args.get("y_data") or [],
+        "x_data_address": args.get("x_data_address"),
+        "y_data_address": args.get("y_data_address"),
+        "x_data_column": args.get("x_data_column"),
+        "y_data_column": args.get("y_data_column"),
+        "height": args.get("height"),
+        "distance": args.get("distance"),
+    }
+    return await manager.call_tool("peak_and_valley", "detect_peaks", _child_payload(child_args, meta))
+
+@mcp.tool()
+async def detect_valleys(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    args, meta = _split_payload(payload)
+    child_args = {
+        "data_address": args.get("data_address"),
+        "x_data": args.get("x_data") or [],
+        "y_data": args.get("y_data") or [],
+        "x_data_address": args.get("x_data_address"),
+        "y_data_address": args.get("y_data_address"),
+        "x_data_column": args.get("x_data_column"),
+        "y_data_column": args.get("y_data_column"),
+        "height": args.get("height"),
+        "distance": args.get("distance"),
+    }
+    return await manager.call_tool("peak_and_valley", "detect_valleys", _child_payload(child_args, meta))
 
 @mcp.tool()
 async def list_child_tools(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:

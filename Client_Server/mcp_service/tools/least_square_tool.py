@@ -327,7 +327,16 @@ def generate_pred_values_2d(payload: Optional[Dict[str, Any]] = None) -> Dict[st
 
     model_func = str_to_function_2d(model_func_str)
     predicted_y = model_func(params, np.array(x_data))
-    return _success({"predicted_y": _safe_opt_to_list(predicted_y)})
+
+    result = _safe_opt_to_list(predicted_y)
+    if result is None:
+        return _error("model produced no predicted values")
+
+    result_address = data_memory.store(result)
+    return _success({
+        "predicted_y_address": result_address,
+        "predicted_y_count": len(result),
+    })
 
 
 @mcp.tool()
@@ -351,7 +360,15 @@ def generate_pred_values_3d(payload: Optional[Dict[str, Any]] = None) -> Dict[st
 
     model_func = str_to_function_3d(model_func_str, var_name="x,y")
     predicted_z = model_func(params, np.array(x_data), np.array(y_data))
-    return _success({"predicted_z": _safe_opt_to_list(predicted_z)})
+    result = _safe_opt_to_list(predicted_z)
+    if result is None:
+        return _error("model produced no predicted values")
+
+    result_address = data_memory.store(result)
+    return _success({
+        "predicted_z_address": result_address,
+        "predicted_z_count": len(result),
+    })
 
 if __name__ == "__main__":
     mcp.run(transport="stdio")

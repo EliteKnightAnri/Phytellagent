@@ -121,12 +121,17 @@ TOOL_SCHEMAS = [
             "parameters": {
                 "type": "object",
                 "properties": {
+                    "data_address": {"type": "string", "description": "Memory address that contains a DataFrame with x and y columns or arrays."},
                     "x_data": {"type": "array", "items": {"type": "number"}, "description": "X-axis data points."},
                     "y_data": {"type": "array", "items": {"type": "number"}, "description": "Y-axis data points."},
+                    "x_data_address": {"type": "string", "description": "Memory address of a preprocessed array to use as x-data."},
+                    "y_data_address": {"type": "string", "description": "Memory address of a preprocessed array to use as y-data."},
+                    "x_data_column": {"type": "string", "description": "Column name in the referenced DataFrame to use for x-data."},
+                    "y_data_column": {"type": "string", "description": "Column name in the referenced DataFrame to use for y-data."},
                     "model_func_str": {"type": "string", "description": "A string representation of the model function to fit, e.g. 'a*x + b'."},
                     "initial_params": {"type": "array", "items": {"type": "number"}, "description": "Optional initial parameter estimates for the optimization."}
                 },
-                "required": ["x_data", "y_data", "model_func_str"],
+                "required": ["model_func_str"],
             },
         },
     },
@@ -138,13 +143,20 @@ TOOL_SCHEMAS = [
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "x_data": {"type": "array", "items": {"type": "number"}, "description": "X-axis data points."},
-                    "y_data": {"type": "array", "items": {"type": "number"}, "description": "Y-axis data points."},
-                    "z_data": {"type": "array", "items": {"type": "number"}, "description": "Z-axis data points."},
+                    "data_address": {"type": "string", "description": "Memory address that contains a DataFrame with x, y, z columns or arrays."},
+                    "x_data": {"type": "array", "items": {"type": "number"}, "description": "X-axis data points supplied directly."},
+                    "y_data": {"type": "array", "items": {"type": "number"}, "description": "Y-axis data points supplied directly."},
+                    "z_data": {"type": "array", "items": {"type": "number"}, "description": "Z-axis data points supplied directly."},
+                    "x_data_address": {"type": "string", "description": "Memory address of a preprocessed array to use as x-data."},
+                    "y_data_address": {"type": "string", "description": "Memory address of a preprocessed array to use as y-data."},
+                    "z_data_address": {"type": "string", "description": "Memory address of a preprocessed array to use as z-data."},
+                    "x_data_column": {"type": "string", "description": "Column name in the referenced DataFrame to use for x-data."},
+                    "y_data_column": {"type": "string", "description": "Column name in the referenced DataFrame to use for y-data."},
+                    "z_data_column": {"type": "string", "description": "Column name in the referenced DataFrame to use for z-data."},
                     "model_func_str": {"type": "string", "description": "A string representation of the model function to fit, e.g. 'a*x + b*y + c'."},
                     "initial_params": {"type": "array", "items": {"type": "number"}, "description": "Optional initial parameter estimates for the optimization."}
                 },
-                "required": ["x_data", "y_data", "z_data", "model_func_str"],
+                "required": ["model_func_str"],
             },
         },
     },
@@ -152,15 +164,18 @@ TOOL_SCHEMAS = [
         "type": "function",
         "function":{
             "name": "generate_pred_values_2d",
-            "description": "Generate predicted values for 2D data points based on a fitted model.",
+            "description": "Generate predicted values for 2D data points based on a fitted model and return a reusable memory address.",
             "parameters": {
                 "type": "object",
                 "properties": {
+                    "data_address": {"type": "string", "description": "Memory address that contains a DataFrame with x column or an array."},
                     "x_data": {"type": "array", "items": {"type": "number"}, "description": "X-axis data points."},
+                    "x_data_address": {"type": "string", "description": "Memory address of a preprocessed array to use as x-data."},
+                    "x_data_column": {"type": "string", "description": "Column name in the referenced DataFrame to use for x-data."},
                     "model_func_str": {"type": "string", "description": "A string representation of the model function to fit, e.g. 'a*x + b'."},
                     "params": {"type": "array", "items": {"type": "number"}, "description": "Optimized parameters for the model."}
                 },
-                "required": ["x_data", "model_func_str", "params"],
+                "required": ["model_func_str", "params"],
             },
         },
     },
@@ -168,16 +183,21 @@ TOOL_SCHEMAS = [
         "type": "function",
         "function":{
             "name": "generate_pred_values_3d",
-            "description": "Generate predicted values for 3D data points based on a fitted model.",
+            "description": "Generate predicted values for 3D data points based on a fitted model and return a reusable memory address.",
             "parameters": {
                 "type": "object",
                 "properties": {
+                    "data_address": {"type": "string", "description": "Memory address that contains a DataFrame with x, y columns or arrays."},
                     "x_data": {"type": "array", "items": {"type": "number"}, "description": "X-axis data points."},
                     "y_data": {"type": "array", "items": {"type": "number"}, "description": "Y-axis data points."},
+                    "x_data_address": {"type": "string", "description": "Memory address of a preprocessed array to use as x-data."},
+                    "y_data_address": {"type": "string", "description": "Memory address of a preprocessed array to use as y-data."},
+                    "x_data_column": {"type": "string", "description": "Column name in the referenced DataFrame to use for x-data."},
+                    "y_data_column": {"type": "string", "description": "Column name in the referenced DataFrame to use for y-data."},
                     "model_func_str": {"type": "string", "description": "A string representation of the model function to fit, e.g. 'a*x + b*y + c'."},
                     "params": {"type": "array", "items": {"type": "number"}, "description": "Optimized parameters for the model."}
                 },
-                "required": ["x_data", "y_data", "model_func_str", "params"],
+                "required": ["model_func_str", "params"],
             },
         },
     },
@@ -189,7 +209,7 @@ TOOL_SCHEMAS = [
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "data_address": {"type": "string", "description": "Memory address returned by import_csv/import_excel that contains a DataFrame."},
+                    "data_address": {"type": "string", "description": "Memory address that contains a DataFrame or arrays."},
                     "x_data": {"type": "array", "items": {"type": "number"}, "description": "X-axis data points supplied directly."},
                     "y_data": {"type": "array", "items": {"type": "number"}, "description": "Y-axis data points supplied directly."},
                     "x_data_address": {"type": "string", "description": "Memory address of a preprocessed array to use as x-data."},
@@ -213,7 +233,7 @@ TOOL_SCHEMAS = [
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "data_address": {"type": "string", "description": "Memory address returned by import_csv/import_excel that contains a DataFrame."},
+                    "data_address": {"type": "string", "description": "Memory address that contains a DataFrame or arrays."},
                     "x_data": {"type": "array", "items": {"type": "number"}, "description": "X-axis data points supplied directly."},
                     "y_data": {"type": "array", "items": {"type": "number"}, "description": "Y-axis data points supplied directly."},
                     "z_data": {"type": "array", "items": {"type": "number"}, "description": "Z-axis data points supplied directly."},
@@ -252,8 +272,8 @@ TOOL_SCHEMAS = [
                     "y2_data_address": {"type": "string", "description": "Memory address of a preprocessed array for y2."},
                     "x1_data_column": {"type": "string", "description": "Column name in the referenced DataFrame for x1."},
                     "y1_data_column": {"type": "string", "description": "Column name in the referenced DataFrame for y1."},
-                    "x2_data_column": {"type": "string", "description": "Column name in the referenced DataFrame for x2."},
-                    "y2_data_column": {"type": "string", "description": "Column name in the referenced DataFrame for y2."},
+                    "x2_data_column": {"type": "string", "description": "Column name in the referenced DataFrame for x2 (defaults to 'x' when only x2_data_address is provided)."},
+                    "y2_data_column": {"type": "string", "description": "Column name in the referenced DataFrame for y2 (defaults to 'y' when only y2_data_address is provided)."},
                     "title": {"type": "string", "description": "Title of the plot."},
                     "x_label": {"type": "string", "description": "Label for the X-axis. Never use Chinese characters to avoid font issues."},
                     "y_label": {"type": "string", "description": "Label for the Y-axis. Never use Chinese characters to avoid font issues."},
@@ -287,9 +307,9 @@ TOOL_SCHEMAS = [
                     "x1_data_column": {"type": "string", "description": "Column name in the referenced DataFrame for x1."},
                     "y1_data_column": {"type": "string", "description": "Column name in the referenced DataFrame for y1."},
                     "z1_data_column": {"type": "string", "description": "Column name in the referenced DataFrame for z1."},
-                    "x2_data_column": {"type": "string", "description": "Column name in the referenced DataFrame for x2."},
-                    "y2_data_column": {"type": "string", "description": "Column name in the referenced DataFrame for y2."},
-                    "z2_data_column": {"type": "string", "description": "Column name in the referenced DataFrame for z2."},
+                    "x2_data_column": {"type": "string", "description": "Column name in the referenced DataFrame for x2 (defaults to 'x' when only x2_data_address is provided)."},
+                    "y2_data_column": {"type": "string", "description": "Column name in the referenced DataFrame for y2 (defaults to 'y' when only y2_data_address is provided)."},
+                    "z2_data_column": {"type": "string", "description": "Column name in the referenced DataFrame for z2 (defaults to 'z' when only z2_data_address is provided)."},
                     "title": {"type": "string", "description": "Title of the plot."},
                     "x_label": {"type": "string", "description": "Label for the X-axis. Never use Chinese characters to avoid font issues."},
                     "y_label": {"type": "string", "description": "Label for the Y-axis. Never use Chinese characters to avoid font issues."},
@@ -402,6 +422,50 @@ TOOL_SCHEMAS = [
                     "sample_rate": {"type": "number", "description": "Sampling rate of the signal for accurate frequency axis calculation."}
                 },
                 "required": ["signal"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "detect_peaks",
+            "description": "Detect peaks using the find_peaks algorithm with parameters for height and distance.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "data_address": {"type": "string", "description": "Memory address that contains a DataFrame or arrays."},
+                    "x_data": {"type": "array", "items": {"type": "number"}, "description": "X-axis data points supplied directly."},
+                    "y_data": {"type": "array", "items": {"type": "number"}, "description": "Y-axis data points supplied directly."},
+                    "x_data_address": {"type": "string", "description": "Memory address of a preprocessed array to use as x-data."},
+                    "y_data_address": {"type": "string", "description": "Memory address of a preprocessed array to use as y-data."},
+                    "x_data_column": {"type": "string", "description": "Column name in the referenced DataFrame to use for x-data."},
+                    "y_data_column": {"type": "string", "description": "Column name in the referenced DataFrame to use for y-data."},
+                    "height": {"type": "number", "description": "Minimum height of the peaks."},
+                    "distance": {"type": "integer", "description": "Minimum distance between peaks."}
+                },
+                "required": ["data_address", "height", "distance"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "detect_valleys",
+            "description": "Detect valleys using the find_peaks algorithm with parameters for height and distance.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "data_address": {"type": "string", "description": "Memory address that contains a DataFrame or arrays."},
+                    "x_data": {"type": "array", "items": {"type": "number"}, "description": "X-axis data points supplied directly."},
+                    "y_data": {"type": "array", "items": {"type": "number"}, "description": "Y-axis data points supplied directly."},
+                    "x_data_address": {"type": "string", "description": "Memory address of a preprocessed array to use as x-data."},
+                    "y_data_address": {"type": "string", "description": "Memory address of a preprocessed array to use as y-data."},
+                    "x_data_column": {"type": "string", "description": "Column name in the referenced DataFrame to use for x-data."},
+                    "y_data_column": {"type": "string", "description": "Column name in the referenced DataFrame to use for y-data."},
+                    "height": {"type": "number", "description": "Maximum height of the valleys."},
+                    "distance": {"type": "integer", "description": "Maximum distance between valleys."}
+                },
+               "required": ["data_address", "height", "distance"],
             },
         },
     },

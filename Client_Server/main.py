@@ -95,6 +95,7 @@ class ChatSession:
             {'id': 'file_convert', 'name': 'file_convert_tool', 'url': 'mcp_service/tools/file_convert_tool.py', 'selected': True},
             {'id': 'differential_equations', 'name': 'differential_equations_tool', 'url': 'mcp_service/tools/differential_equations_tool.py', 'selected': True},
             {'id': 'fourier', 'name': 'fourier_tool', 'url': 'mcp_service/tools/fourier_tool.py', 'selected': True},
+            {'id': 'peak_and_valley', 'name': 'peak_tool', 'url': 'mcp_service/tools/peak_tool.py', 'selected': True},
         ]
         self.mcp_dialog = None
 
