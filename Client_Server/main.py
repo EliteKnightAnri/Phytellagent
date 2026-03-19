@@ -228,20 +228,17 @@ class ChatSession:
                     with ui.card().classes('w-full rounded-[26px] shadow-sm border border-gray-200 bg-[#f4f4f4] focus-within:bg-white focus-within:border-gray-300 focus-within:shadow-md transition-all gap-0 p-2'):
                         with ui.row().classes('w-full items-center gap-2 px-2'):
                             with ui.button(icon='add_circle', on_click=self.open_upload_dialog).props('flat round color=grey-6').classes('mb-1'):
-                              ui.tooltip('上传文件')
+                                ui.tooltip('上传文件')
 
                             with ui.button(icon='inventory_2', on_click=self.open_kb_manager).props('flat round color=grey-6').classes('mb-1'):
                                 ui.tooltip('知识库管理')
 
-                            ui.space().style('width: 1px; height: 1px; display: inline-block;')
-
-                            with ui.button(icon='database', on_click=self.open_sql_config_dialog).props('flat round color=grey-6').classes('mb-1'):
+                            with ui.button(icon='storage', on_click=self.open_sql_config_dialog).props('flat round color=grey-6').classes('mb-1'):
                                 ui.tooltip('配置 MySQL 数据源')
 
-                            with ui.button(icon='construction', on_click=self.open_mcp_dialog) \
-                                .props('flat round color=grey-6').classes('mb-1'):
-                              ui.tooltip('选择 MCP 工具')
-                              self.mcp_indicator = ui.badge().props('floating color=green-500 rounded dot').classes('hidden')
+                            with ui.button(icon='construction', on_click=self.open_mcp_dialog).props('flat round color=grey-6').classes('mb-1'):
+                                ui.tooltip('选择 MCP 工具')
+                                self.mcp_indicator = ui.badge().props('floating color=green-500 rounded dot').classes('hidden')
 
                             self.input_textarea = ui.textarea(
                                 placeholder="给AI助手发送消息...",
@@ -302,16 +299,20 @@ class ChatSession:
     def build_sidebar(self):
         with ui.left_drawer(value=True).classes('bg-gray-50 w-[260px] border-r border-gray-200') as self.drawer:
             
-            # New Chat 按钮
-            with ui.row().classes('p-3'):
-                with ui.button(on_click=self.on_new_chat_click).classes('w-full flex items-center justify-start gap-3 px-3 py-3 bg-white hover:bg-gray-200 rounded-lg border border-gray-300 shadow-sm transition-colors'):
+            # --- 顶部操作区 (New Chat & 设置) ---
+            with ui.row().classes('w-full p-3 items-center justify-between flex-nowrap gap-2'):
+                
+                # 1. New Chat 按钮 
+                with ui.button(on_click=self.on_new_chat_click).classes('flex-grow flex items-center justify-start gap-2 px-3 py-2 bg-white hover:bg-gray-200 rounded-lg border border-gray-300 shadow-sm transition-colors'):
                     ui.icon('add', size='xs').classes('text-black')
                     ui.label('New chat').classes('text-sm text-black font-medium normal-case')
 
-                    ui.button(icon='settings', on_click=self.open_settings_dialog).props('flat round color=black').tooltip('设置')
-            # 历史记录区域
-            with ui.column().classes('w-full px-3 gap-1 mt-4'):
-                ui.label('Recent').classes('text-xs font-bold text-black px-3 mb-1')
+                # 2. 设置按钮 
+                ui.button(icon='settings', on_click=self.open_settings_dialog).props('flat round color=grey-7 size=sm').tooltip('设置')
+
+            # --- 历史记录区域 ---
+            with ui.column().classes('w-full px-3 gap-1 mt-2 flex-grow overflow-y-auto'):
+                ui.label('Recent').classes('text-xs font-bold text-gray-500 px-1 mb-1')
                 self.history_container = ui.column().classes('w-full gap-1')
                 self.refresh_history_ui()
 
@@ -347,42 +348,7 @@ class ChatSession:
         
         # 2. 调用后端 API
         res = await self.backend.delete_file(filename)
-        # Settings dialog
-        def open_settings_dialog(self):
-            if self.mcp_dialog:
-                self.mcp_dialog.open()
-                return
-
-            with ui.dialog().classes('w-1/2') as dlg:
-                ui.label('后端配置（仅用于开发环境）')
-                api_input = ui.input('Deepseek API Key').props('password')
-                status_label = ui.label('')
-
-                async def load_settings():
-                    res = await self.backend.get_settings()
-                    if isinstance(res, dict) and res.get('deepseek_api_key_set'):
-                        api_input.value = '•••••••'
-                        status_label.text = '已设置 API Key（隐藏）'
-                    else:
-                        status_label.text = '未设置 API Key'
-
-                async def save():
-                    key = api_input.value.strip()
-                    if not key:
-                        ui.notify('请输入 API Key', type='negative')
-                        return
-                    res = await self.backend.set_settings(key)
-                    if isinstance(res, dict) and res.get('status') == 'success':
-                        ui.notify('保存成功', type='positive')
-                        dlg.close()
-                    else:
-                        ui.notify('保存失败', type='negative')
-
-                    ui.button('保存', on_click=lambda _: asyncio.create_task(save())).props('unelevated')
-                    ui.button('取消', on_click=lambda _: dlg.close()).props('flat')
-
-                    self.mcp_dialog = dlg
-                    asyncio.create_task(load_settings())
+        
         
         # 3. 处理结果
         if res.get('status') == 'success':
@@ -588,9 +554,11 @@ class ChatSession:
         self.refresh_history_ui()
 
     # 对话设置（Deepseek API、MySQL配置于此处设置）
+
     def open_settings_dialog(self):
-        if self.mcp_dialog:
-            self.mcp_dialog.open()
+        
+        if getattr(self, 'settings_dialog', None):
+            self.settings_dialog.open()
             return
 
         with ui.dialog().props('persistent').classes('w-auto') as dlg:
@@ -640,11 +608,10 @@ class ChatSession:
                     ui.button('保存到设置', on_click=lambda _: asyncio.create_task(save_persistent())).props('unelevated')
                     ui.button('取消', on_click=lambda _: dlg.close()).props('flat')
 
-        self.mcp_dialog = dlg
+        self.settings_dialog = dlg
         asyncio.create_task(load_settings())
-        
-        # 4. 调用持久化方法，将 self.chat_history 写入 local_history.json
-        self._save_history_to_disk()
+      
+        dlg.open()
 
     def open_sql_config_dialog(self):
         with ui.dialog().props('persistent').classes('w-auto') as dlg:
