@@ -96,6 +96,7 @@ class ChatSession:
             {'id': 'differential_equations', 'name': 'differential_equations_tool', 'url': 'mcp_service/tools/differential_equations_tool.py', 'selected': True},
             {'id': 'fourier', 'name': 'fourier_tool', 'url': 'mcp_service/tools/fourier_tool.py', 'selected': True},
             {'id': 'peak_and_valley', 'name': 'peak_tool', 'url': 'mcp_service/tools/peak_tool.py', 'selected': True},
+            {'id': 'draw_function', 'name': 'draw_function_tool', 'url': 'mcp_service/tools/draw_function_tool.py', 'selected': True},
         ]
         self.mcp_dialog = None
 

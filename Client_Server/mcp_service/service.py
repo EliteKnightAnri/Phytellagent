@@ -31,6 +31,7 @@ CHILD_SERVERS: Dict[str, Path] = {
     "differential_equations": TOOLS_DIR / "differential_equations_tool.py",
     "fourier": TOOLS_DIR / "fourier_tool.py",
     "peak_and_valley": TOOLS_DIR / "peak_tool.py",
+    "draw_function": TOOLS_DIR / "draw_function_tool.py",
 }
 
 mcp = FastMCP(name="Main Aggregator")
@@ -469,6 +470,55 @@ async def detect_valleys(payload: Optional[Dict[str, Any]] = None) -> Dict[str, 
         "distance": args.get("distance"),
     }
     return await manager.call_tool("peak_and_valley", "detect_valleys", _child_payload(child_args, meta))
+
+@mcp.tool()
+async def generate_2d_points(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    args, meta = _split_payload(payload)
+    child_args = {
+        "function": args.get("function", "x ** 2") or meta.get("function", "x ** 2") or "x ** 2",  
+        "variable": args.get("variable", "x"),
+        "x_range": args.get("x_range", [-10, 10]),
+        "num_points": args.get("num_points", 100),
+    }
+    return await manager.call_tool("draw_function", "generate_2d_points", _child_payload(child_args, meta))
+
+@mcp.tool()
+async def generate_3d_points(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    args, meta = _split_payload(payload)
+    child_args = {
+        "function": args.get("function", "x + y") or meta.get("function", "x + y") or "x + y",
+        "variables": args.get("variables", "x,y"),
+        "x_range": args.get("x_range", [-10, 10]),
+        "y_range": args.get("y_range", [-10, 10]),
+        "num_points": args.get("num_points", 100),
+    }
+    return await manager.call_tool("draw_function", "generate_3d_points", _child_payload(child_args, meta))
+
+@mcp.tool()
+async def plot_2d_function(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    args, meta = _split_payload(payload)
+    child_args = {
+        "function": args.get("function", "x ** 2") or meta.get("function", "x ** 2") or "x ** 2",
+        "variable": args.get("variable", "x"),
+        "x_range": args.get("x_range", [-10, 10]),
+        "num_points": args.get("num_points", 100),
+        "file_path": args.get("file_path", "function_plot.png") or meta.get("file_path", "function_plot.png") or "function_plot.png",
+    }
+    return await manager.call_tool("draw_function", "plot_2d_function", _child_payload(child_args, meta))
+
+@mcp.tool()
+async def plot_3d_function(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    args, meta = _split_payload(payload)
+    child_args = {
+        "function": args.get("function", "x + y") or meta.get("function", "x + y") or "x + y",
+        "variables": args.get("variables", "x,y"),
+        "x_range": args.get("x_range", [-10, 10]),
+        "y_range": args.get("y_range", [-10, 10]),
+        "num_points": args.get("num_points", 100),
+        "file_path": args.get("file_path", "function_3d_plot.png") or meta.get("file_path", "function_3d_plot.png") or "function_3d_plot.png",
+    }
+    return await manager.call_tool("draw_function", "plot_3d_function", _child_payload(child_args, meta))
+
 
 @mcp.tool()
 async def list_child_tools(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:

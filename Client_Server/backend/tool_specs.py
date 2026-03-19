@@ -328,7 +328,7 @@ TOOL_SCHEMAS = [
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "diff_equation": {"type": "string", "description": "A string representation of the differential equation, e.g. 'dy/dx = a*x + b*y'."},
+                    "diff_equation": {"type": "string", "description": "A string representation of the right side of the differential equation, e.g. 'a*x + b*y'."},
                     "x0": {"type": "number", "description": "Initial value of the independent variable x, default 0."},
                     "y0": {"type": "number", "description": "Initial value of the dependent variable y, default 1."},
                     "x_end": {"type": "number", "description": "End value of x for the solution, default 10."},
@@ -346,7 +346,7 @@ TOOL_SCHEMAS = [
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "diff_equation": {"type": "string", "description": "A string representation of the differential equation, e.g. 'dy/dx = a*x + b*y'."},
+                    "diff_equation": {"type": "string", "description": "A string representation of the right side of the differential equation, e.g. 'a*x + b*y'."},
                     "x0": {"type": "number", "description": "Initial value of the independent variable x, default 0."},
                     "y0": {"type": "number", "description": "Initial value of the dependent variable y, default 1."},
                     "x_end": {"type": "number", "description": "End value of x for the solution, default 10."},
@@ -469,6 +469,79 @@ TOOL_SCHEMAS = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "generate_2d_points",
+            "description": "Generate 2D points only, based on a provided function string and return them as arrays or a pandas memory address.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "function": {"type": "string", "description": "The function string to evaluate."},
+                    "variable": {"type": "string", "description": "The variable name for the function."},
+                    "x_range": {"type": "array", "items": {"type": "number"}, "description": "The range of x-values."},
+                    "num_points": {"type": "integer", "description": "The number of points to generate."}
+                },
+                "required": ["function", "variable", "x_range", "num_points"]
+            }
+
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "generate_3d_points",
+            "description": "Generate 3D points only, based on a provided function string and return them as arrays or a pandas memory address.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "function": {"type": "string", "description": "The function string to evaluate."},
+                    "variables": {"type": "string", "description": "The variable names for the function, separated by commas."},
+                    "x_range": {"type": "array", "items": {"type": "number"}, "description": "The range of x-values."},
+                    "y_range": {"type": "array", "items": {"type": "number"}, "description": "The range of y-values."},
+                    "num_points": {"type": "integer", "description": "The number of points to generate along each axis."}
+                },
+                "required": ["function", "variables", "x_range", "y_range", "num_points"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "plot_2d_function",
+            "description": "Generate function points, plot a 2D function based on a provided function string, and return the saved image path.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "function": {"type": "string", "description": "The function string to evaluate."},
+                    "variable": {"type": "string", "description": "The variable name for the function."},
+                    "x_range": {"type": "array", "items": {"type": "number"}, "description": "The range of x-values."},
+                    "num_points": {"type": "integer", "description": "The number of points to generate."},
+                    "file_path": {"type": "string", "description": "File path to save the generated plot image."}
+                },
+                "required": ["function", "variable", "x_range", "num_points", "file_path"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "plot_3d_function",
+            "description": "Generate function points, plot a 3D function based on a provided function string, and return the saved image path.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "function": {"type": "string", "description": "The function string to evaluate."},
+                    "variables": {"type": "string", "description": "The variable names for the function, separated by commas."},
+                    "x_range": {"type": "array", "items": {"type": "number"}, "description": "The range of x-values."},
+                    "y_range": {"type": "array", "items": {"type": "number"}, "description": "The range of y-values."},
+                    "num_points": {"type": "integer", "description": "The number of points to generate along each axis."},
+                    "file_path": {"type": "string", "description": "File path to save the generated plot image."}
+                },
+                "required": ["function", "variables", "x_range", "y_range", "num_points", "file_path"]
+            }
+        }
+    }
 ]
 
 
