@@ -1,61 +1,35 @@
 import numpy as np
 from fastmcp import FastMCP
-from data_memory import data_memory
+from my_packages.data_memory import data_memory
+from my_packages.status import split_payload, success, error, load_dataset
+from my_packages import object_to_list
 from typing import Any, Dict, Optional, Tuple, List
 
 mcp = FastMCP("Relevancy Computation Server")
-
-def _split_payload(payload: Optional[Dict[str, Any]] = None) -> Tuple[Dict[str, Any], Dict[str, Any]]:
-    payload = payload or {}
-    return payload.get("args") or {}, payload.get("meta") or {}
-
-def _error(message: str) -> Dict[str, Any]:
-    return {"status": "error", "message": message}
-
-def _success(data: Dict[str, Any]) -> Dict[str, Any]:
-    return {"status": "success", "data": data}
-
-def _load_dataset(args: Dict[str, Any], meta: Dict[str, Any]) -> Tuple[Optional[Any], Optional[str]]:
-    address = args.get("data_address") or meta.get("data_address")
-    if not address:
-        return None, None
-    return data_memory.get(address), address
-
-def _to_list(value: Any) -> List[Any]:
-    if value is None:
-        return []
-    try:
-        if hasattr(value, "tolist") and not isinstance(value, (list, tuple)):
-            value = value.tolist()
-    except Exception:
-        pass
-    if isinstance(value, (list, tuple)):
-        return list(value)
-    return [value]
 
 
 def _extract_from_source(source: Any, column: Optional[str]) -> Optional[list]:
     if source is None:
         return None
     if column is None:
-        return _object_to_list(source)
+        return object_to_list(source)
 
     if isinstance(source, dict):
         if column not in source:
             return None
-        return _object_to_list(source[column])
+        return object_to_list(source[column])
 
     if hasattr(source, "__getitem__"):
         try:
             selection = source[column]
         except Exception:
             return None
-        return _object_to_list(selection)
+        return object_to_list(selection)
 
     return None
 
 def _resolve_series(name: str, args: Dict[str, Any], meta: Dict[str, Any], dataset: Optional[Any]) -> Tuple[Optional[list], Optional[str]]:
-    direct = _as_list(args.get(name)) or _as_list(meta.get(name))
+    direct = object_to_list(args.get(name)) or object_to_list(meta.get(name))
     if direct:
         return direct, None
 
@@ -85,3 +59,47 @@ def _resolve_series(name: str, args: Dict[str, Any], meta: Dict[str, Any], datas
         return extracted, None
 
     return None, None
+
+@mcp.tool()
+def compute_relevancy(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    args, meta = split_payload(payload)
+    dataset, dataset_address = load_dataset(args, meta)
+    if dataset_address and dataset is None:
+        return error(f"data_address {dataset_address} not found")
+
+    x_data, err = _resolve_series("x_data", args, meta, dataset)
+    if err:
+        return error(err)
+    y_data, err = _resolve_series("y_data", args, meta, dataset)
+    if err:
+        return error(err)
+
+    if x_data is None or y_data is None:
+        return error("Both 'x_data' and 'y_data' data series are required")
+
+    try:
+        relevancy = np.corrcoef(x_data, y_data)[0, 1]
+        return success({"relevancy": relevancy})
+    except Exception as e:
+        return error(f"Error computing relevancy: {str(e)}")
+    
+
+@mcp.tool()
+def compute_variance(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    args, meta = split_payload(payload)
+    dataset, dataset_address = load_dataset(args, meta)
+    if dataset_address and dataset is None:
+        return error(f"data_address {dataset_address} not found")
+
+    x_data, err = _resolve_series("x_data", args, meta, dataset)
+    if err:
+        return error(err)
+
+    if x_data is None:
+        return error("'x_data' data series is required")
+
+    try:
+        variance = np.var(x_data)
+        return success({"variance": variance})
+    except Exception as e:
+        return error(f"Error computing variance: {str(e)}")

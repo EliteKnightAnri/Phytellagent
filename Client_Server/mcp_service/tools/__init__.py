@@ -24,6 +24,8 @@ __all__ = [
     'plot_in_3d',
     'double_plot_2d',
     'double_plot_3d',
+    'detect_peaks',
+    'detect_valleys',
 ]
 
 from .bilibili_tool import search_videos
@@ -33,3 +35,4 @@ from .pandas_tool import read_csv, read_excel
 from .least_square_tool import least_square_fit_2d, least_square_fit_3d, generate_pred_values_2d, generate_pred_values_3d
 from .differential_equations_tool import euler_diff_solver, trapezoidal_diff_solver
 from .matplotlib_tool import plot_in_2d, plot_in_3d, double_plot_2d, double_plot_3d
+from .peak_tool import detect_peaks, detect_valleys

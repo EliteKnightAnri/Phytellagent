@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 plt.rcParams['font.family'] = 'DejaVu Sans'  # Ensure consistent font rendering across platforms
 from typing import Any, Dict, List, Optional, Tuple
 from fastmcp import FastMCP
-
-from data_memory import data_memory
+from my_packages.status import split_payload, success, error
+from my_packages.data_memory import data_memory
 
 mcp = FastMCP("Matplotlib Toolbox Server")
 
@@ -24,11 +24,6 @@ def _log_debug(event: str, details: Optional[Dict[str, Any]] = None) -> None:
             fh.write(json.dumps(payload, ensure_ascii=False) + "\n")
     except Exception:
         pass
-
-
-def _split_payload(payload: Optional[Dict[str, Any]] = None) -> Tuple[Dict[str, Any], Dict[str, Any]]:
-    payload = payload or {}
-    return payload.get("args") or {}, payload.get("meta") or {}
 
 
 def _ensure_list(value: Optional[Any]) -> List[Any]:
@@ -65,10 +60,6 @@ def _validate_triplet(x: List[Any], y: List[Any], z: List[Any], label: str) -> O
     if len(x) != len(y) or len(x) != len(z):
         return f"{label} x/y/z length mismatch: {len(x)}, {len(y)}, {len(z)}"
     return None
-
-
-def _success(file_path: str) -> Dict[str, Any]:
-    return {"status": "success", "file_path": file_path}
 
 
 def _to_list(value: Any) -> List[Any]:
@@ -163,7 +154,7 @@ def _resolve_plot_input(name: str, args: Dict[str, Any], meta: Dict[str, Any], d
 
 @mcp.tool()
 def plot_in_2d(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-    args, meta = _split_payload(payload)
+    args, meta = split_payload(payload)
     dataset, dataset_address = _load_dataset(args, meta)
     if dataset_address and dataset is None:
         _log_debug("plot_in_2d_dataset_missing", {"data_address": dataset_address})
@@ -197,12 +188,12 @@ def plot_in_2d(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     plt.savefig(file_path)
     plt.close()
     _log_debug("plot_in_2d_success", {"file_path": file_path, "len": len(x_data), "data_address": dataset_address})
-    return _success(file_path)
+    return success(file_path)
 
 
 @mcp.tool()
 def plot_in_3d(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-    args, meta = _split_payload(payload)
+    args, meta = split_payload(payload)
     dataset, dataset_address = _load_dataset(args, meta)
     if dataset_address and dataset is None:
         _log_debug("plot_in_3d_dataset_missing", {"data_address": dataset_address})
@@ -242,12 +233,12 @@ def plot_in_3d(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     plt.savefig(file_path)
     plt.close()
     _log_debug("plot_in_3d_success", {"file_path": file_path, "len": len(x_data), "data_address": dataset_address})
-    return _success(file_path)
+    return success(file_path)
 
 
 @mcp.tool()
 def double_plot_2d(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-    args, meta = _split_payload(payload)
+    args, meta = split_payload(payload)
     dataset, dataset_address = _load_dataset(args, meta)
     if dataset_address and dataset is None:
         _log_debug("double_plot_2d_dataset_missing", {"data_address": dataset_address})
@@ -299,14 +290,14 @@ def double_plot_2d(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     plt.savefig(file_path)
     plt.close()
     _log_debug("double_plot_2d_success", {"file_path": file_path, "lens": [len(x1_data), len(y1_data), len(x2_data), len(y2_data)], "data_address": dataset_address})
-    return _success(file_path)
+    return success(file_path)
 
 
 @mcp.tool()
 def double_plot_3d(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 - ensures 3d projection registered
 
-    args, meta = _split_payload(payload)
+    args, meta = split_payload(payload)
     dataset, dataset_address = _load_dataset(args, meta)
     if dataset_address and dataset is None:
         _log_debug("double_plot_3d_dataset_missing", {"data_address": dataset_address})
@@ -367,7 +358,7 @@ def double_plot_3d(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     plt.savefig(file_path)
     plt.close()
     _log_debug("double_plot_3d_success", {"file_path": file_path, "lens": [len(x1_data), len(y1_data), len(z1_data), len(x2_data), len(y2_data), len(z2_data)], "data_address": dataset_address})
-    return _success(file_path)
+    return success(file_path)
 
 
 if __name__ == "__main__":

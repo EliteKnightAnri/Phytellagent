@@ -519,6 +519,30 @@ async def plot_3d_function(payload: Optional[Dict[str, Any]] = None) -> Dict[str
     }
     return await manager.call_tool("draw_function", "plot_3d_function", _child_payload(child_args, meta))
 
+@mcp.tool()
+async def compute_relevancy(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    args, meta = _split_payload(payload)
+    child_args = {
+        "data_address": args.get("data_address") or meta.get("data_address"),
+        "x_data": args.get("x_data") or [],
+        "y_data": args.get("y_data") or [],
+        "x_data_address": args.get("x_data_address"),
+        "y_data_address": args.get("y_data_address"),
+        "x_data_column": args.get("x_data_column"),
+        "y_data_column": args.get("y_data_column"),
+    }
+    return await manager.call_tool("compute_relevancy", "compute_relevancy", _child_payload(child_args, meta))
+
+@mcp.tool()
+async def compute_variance_explained(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    args, meta = _split_payload(payload)
+    child_args = {
+        "data_address": args.get("data_address") or meta.get("data_address"),
+        "x_data": args.get("x_data") or [],
+        "x_data_address": args.get("x_data_address"),
+        "x_data_column": args.get("x_data_column"),
+    }
+    return await manager.call_tool("compute_relevancy", "compute_variance_explained", _child_payload(child_args, meta))
 
 @mcp.tool()
 async def list_child_tools(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:

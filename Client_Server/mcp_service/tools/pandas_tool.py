@@ -2,7 +2,7 @@ import pandas as pd
 from typing import Dict, Optional, Tuple, Any
 from fastmcp import FastMCP
 # 把数据写进内存，通过内存地址来访问数据，避免了数据在进程间传输的开销
-from data_memory import data_memory
+from my_packages.data_memory import data_memory
 
 mcp = FastMCP("Pandas Toolbox Server")
 

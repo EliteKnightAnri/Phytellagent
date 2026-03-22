@@ -574,7 +574,44 @@ TOOL_SCHEMAS = [
                 "required": ["function", "variables", "x_range", "y_range", "num_points", "file_path"]
             }
         }
-    }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "compute_relevancy",
+            "description": "Compute the relevancy score between two pieces of text using a specified method and return a score between 0 and 1.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "data_address": {"type": "string", "description": "Memory address that contains a DataFrame or arrays."},
+                    "x_data": {"type": "array", "items": {"type": "number"}, "description": "The x-values for the relevancy computation."},
+                    "y_data": {"type": "array", "items": {"type": "number"}, "description": "The y-values for the relevancy computation."},
+                    "x_data_address": {"type": "string", "description": "Memory address of a preprocessed array to use as x-data."},
+                    "y_data_address": {"type": "string", "description": "Memory address of a preprocessed array to use as y-data."},
+                    "x_data_column": {"type": "string", "description": "Column name in the referenced DataFrame to use for x-data."},
+                    "y_data_column": {"type": "string", "description": "Column name in the referenced DataFrame to use for y-data."},
+                },
+                "required": ["data_address"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "compute_variance",
+            "description": "Compute the variance of a dataset provided either directly as an array or via a pandas memory address, and return the variance value.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "data_address": {"type": "string", "description": "Memory address that contains a DataFrame or arrays."},
+                    "x_data": {"type": "array", "items": {"type": "number"}, "description": "The x-values for the variance computation."},
+                    "x_data_address": {"type": "string", "description": "Memory address of a preprocessed array to use as x-data."},
+                    "x_data_column": {"type": "string", "description": "Column name in the referenced DataFrame to use for x-data."}
+                },
+                "required": ["data_address"]
+            }
+        }
+    },
 ]
 
 

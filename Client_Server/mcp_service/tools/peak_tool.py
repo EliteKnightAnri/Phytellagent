@@ -1,7 +1,8 @@
 import numpy as np
 from scipy.signal import find_peaks
 from fastmcp import FastMCP
-from data_memory import data_memory
+from my_packages.data_memory import data_memory
+from my_packages.status import success, error
 from typing import Any, Dict, Optional, Tuple, List
 
 mcp = FastMCP("Peak Detection Server")
@@ -10,14 +11,6 @@ mcp = FastMCP("Peak Detection Server")
 def _split_payload(payload: Optional[Dict[str, Any]] = None) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     payload = payload or {}
     return payload.get("args") or {}, payload.get("meta") or {}
-
-
-def _error(message: str) -> Dict[str, Any]:
-    return {"status": "error", "message": message}
-
-
-def _success(data: Dict[str, Any]) -> Dict[str, Any]:
-    return {"status": "success", "data": data}
 
 
 def _ensure_list(value: Optional[Any]) -> List[Any]:
@@ -148,19 +141,19 @@ def detect_peaks(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     args, meta = _split_payload(payload)
     dataset, dataset_address = _load_dataset(args, meta)
     if dataset is None and dataset_address is not None:
-        return _error(f"data_address {dataset_address} not found")
+        return error(f"data_address {dataset_address} not found")
 
-    x_data, error = _resolve_series("x_data", args, meta, dataset)
-    if error:
-        return _error(error)
+    x_data, err = _resolve_series("x_data", args, meta, dataset)
+    if err:
+        return error(err)
     if not x_data:
-        return _error("No data provided for 'x_data'")
+        return error("No data provided for 'x_data'")
     
-    y_data, error = _resolve_series("y_data", args, meta, dataset)
-    if error:
-        return _error(error)
+    y_data, err = _resolve_series("y_data", args, meta, dataset)
+    if err:
+        return error(err)
     if not y_data:
-        return _error("No data provided for 'y_data'")
+        return error("No data provided for 'y_data'")
 
     height = args.get("height") or meta.get("height")
     distance = args.get("distance") or meta.get("distance")
@@ -175,26 +168,26 @@ def detect_peaks(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         "properties": {k: v.tolist() for k, v in properties.items()}
     }
     
-    return _success(result)
+    return success(result)
 
 @mcp.tool()
 def detect_valleys(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     args, meta = _split_payload(payload)
     dataset, dataset_address = _load_dataset(args, meta)
     if dataset is None and dataset_address is not None:
-        return _error(f"data_address {dataset_address} not found")
+        return error(f"data_address {dataset_address} not found")
 
-    x_data, error = _resolve_series("x_data", args, meta, dataset)
-    if error:
-        return _error(error)
+    x_data, err = _resolve_series("x_data", args, meta, dataset)
+    if err:
+        return error(err)
     if not x_data:
-        return _error("No data provided for 'x_data'")
+        return error("No data provided for 'x_data'")
     
-    y_data, error = _resolve_series("y_data", args, meta, dataset)
-    if error:
-        return _error(error)
+    y_data, err = _resolve_series("y_data", args, meta, dataset)
+    if err:
+        return error(err)
     if not y_data:
-        return _error("No data provided for 'y_data'")
+        return error("No data provided for 'y_data'")
 
     raw_height = args.get("height") or meta.get("height")
     height = _prepare_valley_height(raw_height)
@@ -213,7 +206,7 @@ def detect_valleys(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         "properties": {k: v.tolist() for k, v in properties.items()}
     }
 
-    return _success(result)
+    return success(result)
 
 if __name__ == "__main__":
     mcp.run(transport="stdio")
