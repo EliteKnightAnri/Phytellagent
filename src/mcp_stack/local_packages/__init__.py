@@ -11,4 +11,4 @@ __all__ = [
 from .str2func import str2func_2d, str2func_3d
 from .list_pack import object_to_list
 from .status import split_payload, success, error
-from .data_memory import DataMemory
+from .data_memory import DataMemory, data_memory

@@ -26,6 +26,12 @@ __all__ = [
     'double_plot_3d',
     'detect_peaks',
     'detect_valleys',
+    'generate_square_signal',
+    'generate_sine_signal',
+    'generate_discrete_signal',
+    'generate_sound_signal',
+    'draw_signal',
+    'draw_discrete_signal',
 ]
 
 from .bilibili_tool import search_videos
@@ -36,3 +42,4 @@ from .least_square_tool import least_square_fit_2d, least_square_fit_3d, generat
 from .differential_equations_tool import euler_diff_solver, trapezoidal_diff_solver
 from .matplotlib_tool import plot_in_2d, plot_in_3d, double_plot_2d, double_plot_3d
 from .peak_tool import detect_peaks, detect_valleys
+from .signal_generate_tool import generate_square_signal, generate_sine_signal, generate_discrete_signal, generate_sound_signal, draw_signal, draw_discrete_signal

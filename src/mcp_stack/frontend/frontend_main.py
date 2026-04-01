@@ -4,6 +4,7 @@ from typing import List, Optional, Dict
 from nicegui import ui, app as nicegui_app
 import json
 import os
+from pathlib import Path
 from models import Message
 from api import BackendClient
 
@@ -23,8 +24,8 @@ def _ext_ok(name: str, allowed: set[str]) -> bool:
 # 单个会话的应用逻辑
 class ChatSession:
 
-    # 定义历史记录保存的文件名
-    HISTORY_FILE = "local_history.json"
+    BASE_DIR = Path(__file__).resolve().parents[3]
+    HISTORY_PATH = BASE_DIR / "docs" / "local_history.json"
 
     def __init__(self):
         # 当前正在显示的消息列表
@@ -120,16 +121,17 @@ class ChatSession:
             "history": serialized_history
         }
             
-        with open(self.HISTORY_FILE, 'w', encoding='utf-8') as f:
+        self.HISTORY_PATH.parent.mkdir(parents=True, exist_ok=True)
+        with self.HISTORY_PATH.open('w', encoding='utf-8') as f:
             json.dump(save_data, f, ensure_ascii=False, indent=2)
 
     # 加载时，读取 active_id 
     def _load_history_from_disk(self):
-        if not os.path.exists(self.HISTORY_FILE):
+        if not self.HISTORY_PATH.exists():
             return
         
         try:
-            with open(self.HISTORY_FILE, 'r', encoding='utf-8') as f:
+            with self.HISTORY_PATH.open('r', encoding='utf-8') as f:
                 data = json.load(f)
             
             # 兼容处理：防止旧格式报错

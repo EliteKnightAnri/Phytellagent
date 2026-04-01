@@ -24,11 +24,18 @@ from langchain_community.document_loaders import (
     Docx2txtLoader,
     JSONLoader
 )
+
+ROOT_DIR = Path(__file__).resolve().parents[3]
+DATA_DIR = ROOT_DIR / "data"
+SOURCE_DOCS_DIR = DATA_DIR / "source_documents"
+FAISS_DIR = DATA_DIR / "faiss_store"
+MODELS_DIR = DATA_DIR / "models"
+DEFAULT_EMBED_MODEL = MODELS_DIR / "all-MiniLM-L6-v2"
 load_dotenv()
 
 # 1. 向量嵌入
 class EmbeddingPipeline:
-    def __init__(self, model_name: str = "models/all-MiniLM-L6-v2",  chunk_size: int = 100, chunk_overlap: int = 20):
+    def __init__(self, model_name: str = str(DEFAULT_EMBED_MODEL),  chunk_size: int = 100, chunk_overlap: int = 20):
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
         self.model = SentenceTransformer(model_name)
@@ -57,7 +64,7 @@ class EmbeddingPipeline:
 
 
 # 2. 文档加载
-def load_all_documents(data_dir: str) -> List[Any]:
+def load_all_documents(data_dir: str = str(SOURCE_DOCS_DIR)) -> List[Any]:
     data_path = Path(data_dir).resolve()
     if not data_path.exists():
         print(f"{data_path}不存在")
@@ -146,7 +153,7 @@ def load_all_documents(data_dir: str) -> List[Any]:
 
 # 3. 向量存储
 class FaissVectorStore:
-    def __init__(self, persist_dir: str = "faiss_store", embedding_model: str = "all-MiniLM-L6-v2", chunk_size: int = 500, chunk_overlap: int = 50):
+    def __init__(self, persist_dir: str = str(FAISS_DIR), embedding_model: str = str(DEFAULT_EMBED_MODEL), chunk_size: int = 500, chunk_overlap: int = 50):
         self.persist_dir = persist_dir
         if not os.path.exists(self.persist_dir):
             os.makedirs(self.persist_dir, exist_ok=True)
@@ -309,8 +316,8 @@ class RAGSearch:
     """
     def __init__(
         self,
-        persist_dir: str = "faiss_store",
-        embedding_model: str = "all-MiniLM-L6-v2",
+        persist_dir: str = str(FAISS_DIR),
+        embedding_model: str = str(DEFAULT_EMBED_MODEL),
         llm_model: str = "deepseek-chat",
     ):
         self.persist_dir = persist_dir
@@ -465,8 +472,8 @@ class RAGSearch:
             
 if __name__ == "__main__":
     # 配置路径
-    DATA_DIR = "source_documents"
-    STORE_DIR = "faiss_store"
+    DATA_DIR = str(SOURCE_DOCS_DIR)
+    STORE_DIR = str(FAISS_DIR)
     
     # 1. 数据加载与索引构建检查
     if not os.path.exists(os.path.join(STORE_DIR, "faiss.index")):

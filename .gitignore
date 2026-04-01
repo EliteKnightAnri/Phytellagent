@@ -7,7 +7,6 @@ temp_uploads/
 dist/
 build/
 .ipynb_checkpoints/
-*.log
 .vscode/
 local_history.json
 
@@ -17,3 +16,6 @@ local_history.json
 
 # Git files
 repo.git/
+
+# DevOps files
+*.log

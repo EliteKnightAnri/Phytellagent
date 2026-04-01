@@ -3,6 +3,10 @@ import pandas as pd
 import os
 import re
 import requests
+from pathlib import Path
+
+ROOT_DIR = Path(__file__).resolve().parents[3]
+KG_DATA_DIR = ROOT_DIR / "data" / "knowledge_graph"
 
 
 def extract_nodes_v9(query: str, all_nodes: list) -> list:
@@ -70,8 +74,7 @@ class KGEngineV9:
 
 def kg_query_tool(query: str, excel_path: str = None) -> str:
     if excel_path is None:
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        excel_path = os.path.join(current_dir, "计算物理知识图谱1.xlsx")
+        excel_path = KG_DATA_DIR / "计算物理知识图谱1.xlsx"
 
     try:
         engine = KGEngineV9(excel_path)
