@@ -13,7 +13,7 @@ local_history.json
 
 # Virtual environments
 .venv/
-Client_Server/.venv
+.venv
 
 # Git files
 repo.git/

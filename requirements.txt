@@ -6,10 +6,14 @@ python-docx
 openai
 langchain
 langchain-community
+langchain-core
+langchain-openai
+langchain-text-splitters
 sentence-transformers
 transformers
 tokenizers
 pydantic
+python-dotenv
 openpyxl
 python-multipart
 aiofiles
@@ -18,6 +22,7 @@ aiohttp
 fastmcp
 mysql-connector-python
 httpx
+requests
 psutil
 matplotlib
 pandas

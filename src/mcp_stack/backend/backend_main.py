@@ -13,60 +13,46 @@ from datetime import datetime
 import hashlib
 from docx import Document
 from pathlib import Path
+from mcp_stack.local_packages.status import build_payload
 from langchain_community.document_loaders import PyPDFLoader, TextLoader, Docx2txtLoader
-from pydantic import BaseModel
 from fastmcp import Client as MCPClient
 import traceback
 import datetime as _dt
 from typing import Dict
 from pydantic import BaseModel as PydanticBaseModel
 import importlib
-from pathlib import Path as _Path
+
+# 回退到项目根目录
+ROOT_DIR = Path(__file__).resolve().parents[3]
+MCP_DIR = ROOT_DIR / "src" / "mcp_stack"
+TOOLS_DIR = MCP_DIR / "tools"
 
 try:
     from .tool_specs import get_tool_schemas
 except ImportError:  # pragma: no cover - fallback when running as script
     from tool_specs import get_tool_schemas  # type: ignore
 
-# === 导入知识图谱模块 ===
+# 导入知识图谱模块
 try:
-    from knowledge_graph.tool import kg_query_tool
-except Exception as e:
-    print(f"[WARN] KG 模块不可用: {e}")
-    kg_query_tool = None
+    from mcp_stack.knowledge_graph.tool import kg_query_tool
+except Exception:
+    try:
+        from knowledge_graph.tool import kg_query_tool  # legacy fallback
+    except Exception as e:
+        print(f"[WARN] KG 模块不可用: {e}")
+        kg_query_tool = None
 
 
-# === 导入 RAG 模块（更稳健的加载：支持多种运行上下文） ===
-RAGSearch = None
+# 导入 RAG 模块
 try:
-    # 优先尝试按文件路径动态加载，保证在任意工作目录下都能找到同目录下的 rag_system.py
-    rag_path = Path(__file__).resolve().parent / "rag_system.py"
-    if rag_path.exists():
-        import importlib.util
-        spec = importlib.util.spec_from_file_location("rag_system_local", str(rag_path))
-        if spec and spec.loader:
-            mod = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(mod)
-            RAGSearch = getattr(mod, "RAGSearch", None)
-    # 回退：尝试常规导入路径（兼容不同的包/模块布局）
-    if RAGSearch is None:
-        try:
-            from Client_Server.backend.rag_system import RAGSearch as _R
-            RAGSearch = _R
-        except Exception:
-            try:
-                from rag_system import RAGSearch as _R2
-                RAGSearch = _R2
-            except Exception:
-                print("[WARN] 未找到 rag_system.py，RAG 功能将无法使用。")
-                RAGSearch = None
-except Exception as _e:
-    print(f"[WARN] 加载 rag_system 失败: {_e}")
-    RAGSearch = None
+    from mcp_stack.rag.rag_system import RAGSearch  # preferred path
+except Exception:
+    try:
+        from rag.rag_system import RAGSearch  # legacy fallback
+    except Exception:
+        print("[WARN] 未找到 rag_system.py，RAG 功能将无法使用。")
+        RAGSearch = None
 
-
-BASE_DIR = Path(__file__).resolve().parent  # .../Client_Server/backend
-ROOT_DIR = BASE_DIR.parent                # .../Client_Server
 
 ALLOWED_KB_EXTS = {'.pdf', '.txt', '.md', '.docx', '.csv', '.xlsx', '.json'}
 # 检查知识库上传文件的扩展名是否在白名单内
@@ -77,7 +63,7 @@ def _kb_ext_ok(filename: str) -> bool:
 
 app = FastAPI(title="DeepSeek Agent Backend (RAG Integrated)", version="2.0")
 
-# === 配置 DeepSeek API 客户端（从环境读取，避免把密钥硬编码在代码中） ===
+# 配置 DeepSeek API 客户端（从环境读取，避免把密钥硬编码在代码中） 
 DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY")
 DEEPSEEK_BASE_URL = os.environ.get("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
 if not DEEPSEEK_API_KEY:
@@ -90,30 +76,30 @@ client = AsyncOpenAI(
 
 rag_engine = None
 
-# === 知识库 & 清单（用于“按文件开关启用/禁用”）===
-KB_DIR = str((ROOT_DIR / "source_documents").resolve())
+# 知识库 & 清单（用于“按文件开关启用/禁用”）
+KB_DIR = str(ROOT_DIR / "data" / "source_documents")
 os.makedirs(KB_DIR, exist_ok=True)
 
 # 用 JSON 记录每个知识库文件的状态（启用/禁用、是否已索引、store_id、更新时间等）
 MANIFEST_PATH = os.path.join(KB_DIR, "_kb_manifest.json")
 MANIFEST_FILENAME = "_kb_manifest.json"
-FAISS_DIR = str((ROOT_DIR / "faiss_store").resolve())
-EMBED_MODEL_PATH = str((ROOT_DIR / "models" / "all-MiniLM-L6-v2").resolve())
-TEMP_DIR = str((ROOT_DIR / "temp_uploads").resolve())
+FAISS_DIR = str(ROOT_DIR / "data" / "faiss_store")
+EMBED_MODEL_PATH = str(ROOT_DIR / "data" / "models" / "all-MiniLM-L6-v2")
+TEMP_DIR = str(ROOT_DIR / "data" / "temp_uploads")
 os.makedirs(TEMP_DIR, exist_ok=True)
 
 # 全局设置文件（保存 API Key 等运行时配置）
-SETTINGS_PATH = str((ROOT_DIR / "mcp_settings.json").resolve())
+SETTINGS_PATH = str(Path(__file__).resolve().parent / "mcp_settings.json")
 
 
 def _ensure_mysql_env(payload: dict) -> dict:
-    """Ensure mcpServers.mysql.env exists; seed defaults when missing."""
+    """确保payload 中有 mcpServers.mysql.env 字段，并返回该 env dict 供后续写入 MySQL 配置。"""
     mcp_servers = payload.setdefault("mcpServers", {})
     mysql_cfg = mcp_servers.setdefault("mysql", {})
     mysql_cfg.setdefault("command", "uv")
     mysql_cfg.setdefault("args", [
         "--directory",
-        "mcp_service/tools",
+        str(TOOLS_DIR),
         "run",
         "mysql_tool.py",
     ])
@@ -261,45 +247,11 @@ _RATE_LIMIT_COUNT = 30
 _RATE_LIMIT_WINDOW = 60.0  # seconds
 
 
-ROUTER_RULES = [
-    {
-        "keywords": ["cpu", "核数", "核心", "系统信息", "服务器信息", "硬件", "配置", "memory", "内存"],
-        "tool": "get_system_info",
-    },
-    {
-        "keywords": ["磁盘", "硬盘", "disk", "空间", "容量"],
-        "tool": "disk_usage",
-    },
-    {
-        "keywords": ["b站", "哔哩", "哔哩哔哩", "视频", "bilibili", "搜视频", "查视频"],
-        "tool": "search_videos",
-    },
-]
-
-
-def _build_payload(args: Optional[dict], meta: Optional[dict], prompt: Optional[str] = None) -> Dict[str, Dict]:
-    """构建调用 MCP 工具的 payload，包含 args 和 meta 两部分。"""
-    payload_args = (args or {}).copy()
-    payload_meta = (meta or {}).copy()
-    if prompt:
-        payload_meta.setdefault("prompt", prompt)
-    return {"args": payload_args, "meta": payload_meta}
-
-
-def _match_router(prompt_text: str):
-    normalized = (prompt_text or "").lower()
-    for rule in ROUTER_RULES:
-        for keyword in rule["keywords"]:
-            if keyword.lower() in normalized:
-                return rule
-    return None
-
-
 async def _call_mcp_tool(tool: str, prompt: str, args: Optional[dict], meta: Optional[dict]):
     if not os.path.exists(MCP_SERVICE_SCRIPT):
         raise FileNotFoundError(f"mcp service not found: {MCP_SERVICE_SCRIPT}")
 
-    payload = _build_payload(args, meta, prompt=prompt)
+    payload = build_payload(args, meta, prompt=prompt)
     async with MCPClient(MCP_SERVICE_SCRIPT) as client:
         await client.ping()
         result = await client.call_tool(tool, {"payload": payload})
@@ -307,7 +259,7 @@ async def _call_mcp_tool(tool: str, prompt: str, args: Optional[dict], meta: Opt
 
 
 # === MCP 转发端点（将请求转发到 mcp_service/service.py） ===
-MCP_SERVICE_SCRIPT = str((ROOT_DIR / "mcp_service" / "service.py").resolve())
+MCP_SERVICE_SCRIPT = str((MCP_DIR / "mcp_service" / "service.py").resolve())
 
 _AI_AGENT_FN = None  # cache ai_agent callable from backend.client
 
@@ -318,7 +270,7 @@ def _load_backend_client_module():
     import importlib.util
 
     module_name = "backend.client"
-    client_path = str((ROOT_DIR / "backend" / "client.py").resolve())
+    client_path = str((MCP_DIR / "backend" / "client.py").resolve())
 
     if module_name in sys.modules:
         return sys.modules[module_name]
@@ -401,7 +353,7 @@ async def mcp_call(req: MCPCallRequest):
     if not os.path.exists(MCP_SERVICE_SCRIPT):
         return {"status": "error", "message": f"mcp service not found: {MCP_SERVICE_SCRIPT}"}
 
-    payload = _build_payload(req.args, req.meta)
+    payload = build_payload(req.args, req.meta)
 
     try:
         async with MCPClient(MCP_SERVICE_SCRIPT) as client:
@@ -467,27 +419,6 @@ async def agent_ask(request: Request, body: AgentAskRequest, x_api_key: Optional
             try:
                 with open("mcp_call_error.log", "a", encoding="utf-8") as f:
                     f.write("=== AGENT ASK MCP CALL ERROR: " + _dt.datetime.now().isoformat() + " ===\n")
-                    f.write(tb + "\n\n")
-            except Exception:
-                pass
-            return {"status": "error", "message": str(e)}
-
-    # 关键字命中时直接转到相应工具
-    route = _match_router(body.prompt)
-    if route:
-        merged_args = dict(route.get("args", {}))
-        if body.args:
-            merged_args.update(body.args)
-        try:
-            result = await _call_mcp_tool(route["tool"], body.prompt, merged_args, body.meta)
-            return {"status": "success", "result": result}
-        except FileNotFoundError as e:
-            return {"status": "error", "message": str(e)}
-        except Exception as e:
-            tb = traceback.format_exc()
-            try:
-                with open("agent_router_error.log", "a", encoding="utf-8") as f:
-                    f.write("=== AGENT ROUTER ERROR: " + _dt.datetime.now().isoformat() + " ===\n")
                     f.write(tb + "\n\n")
             except Exception:
                 pass
@@ -614,7 +545,7 @@ async def post_settings(body: SettingsRequest):
                 try:
                     importlib.import_module("backend.client")
                 except Exception:
-                    spec = importlib.util.spec_from_file_location("backend.client", str((ROOT_DIR / "backend" / "client.py").resolve()))
+                    spec = importlib.util.spec_from_file_location("backend.client", str(MCP_DIR / "backend" / "client.py").resolve())
                     mod = importlib.util.module_from_spec(spec)
                     spec.loader.exec_module(mod)  # type: ignore
                     sys.modules["backend.client"] = mod
@@ -636,7 +567,8 @@ class MySQLEnvRequest(PydanticBaseModel):
 
 @app.post("/set_mysql_env")
 async def set_mysql_env(body: MySQLEnvRequest):
-    """仅将用户提供的 MySQL 配置写入当前进程的环境变量（不持久化到 mcp_settings.json）。
+    """
+    仅将用户提供的 MySQL 配置写入当前进程的环境变量（不持久化到 mcp_settings.json）。
 
     这个接口适用于希望立即生效但不想修改磁盘配置的场景。
     """
@@ -689,9 +621,7 @@ async def set_deepseek_env(body: DeepseekEnvRequest):
 
 
 
-# 对话文件上传
-TEMP_DIR = "temp_uploads"
-os.makedirs(TEMP_DIR, exist_ok=True)
+# 对话文件上传（与 RAG 临时目录复用）
 
 ALLOWED_CHAT_EXTS = {'.pdf', '.txt', '.md', '.docx', '.xlsx', '.xls'}
 def _chat_ext_ok(filename: str) -> bool:
@@ -755,9 +685,8 @@ def _extract_temp_text(file_path: str) -> str:
     return ""
 
 
-
-#RAG检索库管理
-#  1. 获取文件列表
+# RAG检索库管理
+# 1. 获取文件列表
 @app.get("/files")
 async def list_files():
     data = _sync_manifest_with_disk()
@@ -891,12 +820,11 @@ async def toggle_file(filename: str, req: ToggleKBRequest):
  #返回知识库目录中的原始文件，供前端预览或下载  
 @app.get("/files/download/{filename}")
 async def download_file(filename: str):
-    file_path = os.path.join("source_documents", filename)
+    file_path = os.path.join(KB_DIR, filename)
     if os.path.exists(file_path):
         # filename参数让浏览器下载/打开时显示正确的文件名
         return FileResponse(file_path, filename=filename)
     return {"error": "File not found"}    
-
 
 
 
@@ -1084,7 +1012,6 @@ async def chat_endpoint(request: FrontendChatRequest):
         yield json.dumps({"type": "stream_end"}, ensure_ascii=False) + "\n"
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
-
 
 
 

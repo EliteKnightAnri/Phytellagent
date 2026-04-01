@@ -1,4 +1,5 @@
-"""Aggregator MCP server that proxies tool calls to child MCP servers.
+"""
+MCP聚合器，将多个子MCP服务器聚合成一个统一的接口供客户端调用。
 
 This server exposes a unified tool surface for the client. Each exported
 tool forwards its call to a dedicated child MCP server (e.g., Bilibili,
@@ -11,15 +12,15 @@ import asyncio
 import json
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
-
+from mcp_stack.local_packages.status import split_payload, child_payload
 from fastmcp import Client, FastMCP
 import traceback
 from datetime import datetime as _dt
 
 
 # Paths to child MCP servers.
-BASE_DIR = Path(__file__).resolve().parent
-TOOLS_DIR = BASE_DIR / "tools"
+BASE_DIR = Path(__file__).resolve().parents[3]
+TOOLS_DIR = BASE_DIR / "src" / "mcp_stack" / "tools"
 
 CHILD_SERVERS: Dict[str, Path] = {
     "bilibili": TOOLS_DIR / "bilibili_tool.py",
@@ -108,17 +109,6 @@ class SubServerManager:
 manager = SubServerManager(CHILD_SERVERS)
 
 
-def _split_payload(payload: Optional[Dict[str, Any]] = None) -> Tuple[Dict[str, Any], Dict[str, Any]]:
-    payload = payload or {}
-    args = payload.get("args") or {}
-    meta = payload.get("meta") or {}
-    return args, meta
-
-
-def _child_payload(args: Optional[Dict[str, Any]] = None, meta: Optional[Dict[str, Any]] = None) -> Dict[str, Dict[str, Any]]:
-    return {"args": args or {}, "meta": meta or {}}
-
-
 def _omit_none(values: Dict[str, Any]) -> Dict[str, Any]:
     """Remove keys whose value is None so child tools can apply their own defaults."""
     return {key: value for key, value in values.items() if value is not None}
@@ -126,45 +116,45 @@ def _omit_none(values: Dict[str, Any]) -> Dict[str, Any]:
 
 @mcp.tool()
 async def search_videos(payload: Optional[Dict[str, Any]] = None) -> Any:
-    args, meta = _split_payload(payload)
+    args, meta = split_payload(payload)
     keyword = args.get("keyword") or meta.get("prompt")
     if not keyword:
         raise ValueError("keyword is required")
-    return await manager.call_tool("bilibili", "search_videos", _child_payload({"keyword": keyword}, meta))
+    return await manager.call_tool("bilibili", "search_videos", child_payload({"keyword": keyword}, meta))
 
 
 @mcp.tool()
 async def SQL_query(payload: Optional[Dict[str, Any]] = None) -> Any:
-    args, meta = _split_payload(payload)
+    args, meta = split_payload(payload)
     sql = args.get("sql") or args.get("query") or meta.get("prompt")
     if not sql:
         raise ValueError("sql/query is required")
-    return await manager.call_tool("mysql", "SQL_query", _child_payload({"query": sql}, meta))
+    return await manager.call_tool("mysql", "SQL_query", child_payload({"query": sql}, meta))
 
 
 @mcp.tool()
 async def get_system_info(payload: Optional[Dict[str, Any]] = None) -> Any:
-    args, meta = _split_payload(payload)
+    args, meta = split_payload(payload)
     key = args.get("key")
-    return await manager.call_tool("system_info", "get_system_info", _child_payload({"key": key}, meta))
+    return await manager.call_tool("system_info", "get_system_info", child_payload({"key": key}, meta))
 
 
 @mcp.tool()
 async def get_environment_variables(payload: Optional[Dict[str, Any]] = None) -> Any:
-    _, meta = _split_payload(payload)
-    return await manager.call_tool("system_info", "get_environment_variables", _child_payload({}, meta))
+    _, meta = split_payload(payload)
+    return await manager.call_tool("system_info", "get_environment_variables", child_payload({}, meta))
 
 
 @mcp.tool()
 async def disk_usage(payload: Optional[Dict[str, Any]] = None) -> Any:
-    args, meta = _split_payload(payload)
+    args, meta = split_payload(payload)
     path = args.get("path") or meta.get("path")
-    return await manager.call_tool("system_info", "disk_usage", _child_payload({"path": path}, meta))
+    return await manager.call_tool("system_info", "disk_usage", child_payload({"path": path}, meta))
 
 
 @mcp.tool()
 async def import_csv(payload: Optional[Dict[str, Any]] = None) -> Any:
-    args, meta = _split_payload(payload)
+    args, meta = split_payload(payload)
     child_args = {
         "file_path": args.get("file_path"),
         "sep": args.get("sep", ","),
@@ -175,11 +165,11 @@ async def import_csv(payload: Optional[Dict[str, Any]] = None) -> Any:
         "index_col": args.get("index_col"),
         "usecols": args.get("usecols"),
     }
-    return await manager.call_tool("pandas", "import_csv", _child_payload(child_args, meta))
+    return await manager.call_tool("pandas", "import_csv", child_payload(child_args, meta))
 
 @mcp.tool()
 async def import_excel(payload: Optional[Dict[str, Any]] = None) -> Any:
-    args, meta = _split_payload(payload)
+    args, meta = split_payload(payload)
     child_args = {
         "file_path": args.get("file_path"),
         "sheet_name": args.get("sheet_name", 0),
@@ -190,11 +180,11 @@ async def import_excel(payload: Optional[Dict[str, Any]] = None) -> Any:
         "index_col": args.get("index_col"),
         "usecols": args.get("usecols"),
     }
-    return await manager.call_tool("pandas", "import_excel", _child_payload(child_args, meta))
+    return await manager.call_tool("pandas", "import_excel", child_payload(child_args, meta))
 
 @mcp.tool()
 async def least_square_fit_2d(payload: Optional[Dict[str, Any]] = None) -> Any:
-    args, meta = _split_payload(payload)
+    args, meta = split_payload(payload)
     child_args = {
         "x_data": args.get("x_data") or [],
         "y_data": args.get("y_data") or [],
@@ -206,12 +196,12 @@ async def least_square_fit_2d(payload: Optional[Dict[str, Any]] = None) -> Any:
         "model_func_str": args.get("model_func_str"),
         "initial_params": args.get("initial_params"),
     }
-    return await manager.call_tool("least_square", "least_square_fit_2d", _child_payload(child_args, meta))
+    return await manager.call_tool("least_square", "least_square_fit_2d", child_payload(child_args, meta))
 
 
 @mcp.tool()
 async def least_square_fit_3d(payload: Optional[Dict[str, Any]] = None) -> Any:
-    args, meta = _split_payload(payload)
+    args, meta = split_payload(payload)
     child_args = {
         "x_data": args.get("x_data") or [],
         "y_data": args.get("y_data") or [],
@@ -226,12 +216,12 @@ async def least_square_fit_3d(payload: Optional[Dict[str, Any]] = None) -> Any:
         "model_func_str": args.get("model_func_str"),
         "initial_params": args.get("initial_params"),
     }
-    return await manager.call_tool("least_square", "least_square_fit_3d", _child_payload(child_args, meta))
+    return await manager.call_tool("least_square", "least_square_fit_3d", child_payload(child_args, meta))
 
 
 @mcp.tool()
 async def generate_pred_values_2d(payload: Optional[Dict[str, Any]] = None) -> Any:
-    args, meta = _split_payload(payload)
+    args, meta = split_payload(payload)
     child_args = {
         "x_data": args.get("x_data") or [],
         "data_address": args.get("data_address"),
@@ -240,12 +230,12 @@ async def generate_pred_values_2d(payload: Optional[Dict[str, Any]] = None) -> A
         "model_func_str": args.get("model_func_str"),
         "params": args.get("params"),
     }
-    return await manager.call_tool("least_square", "generate_pred_values_2d", _child_payload(child_args, meta))
+    return await manager.call_tool("least_square", "generate_pred_values_2d", child_payload(child_args, meta))
 
 
 @mcp.tool()
 async def generate_pred_values_3d(payload: Optional[Dict[str, Any]] = None) -> Any:
-    args, meta = _split_payload(payload)
+    args, meta = split_payload(payload)
     child_args = {
         "x_data": args.get("x_data") or [],
         "y_data": args.get("y_data") or [],
@@ -257,12 +247,12 @@ async def generate_pred_values_3d(payload: Optional[Dict[str, Any]] = None) -> A
         "model_func_str": args.get("model_func_str"),
         "params": args.get("params"),
     }
-    return await manager.call_tool("least_square", "generate_pred_values_3d", _child_payload(child_args, meta))
+    return await manager.call_tool("least_square", "generate_pred_values_3d", child_payload(child_args, meta))
 
 
 @mcp.tool()
 async def plot_in_2d(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-    args, meta = _split_payload(payload)
+    args, meta = split_payload(payload)
     child_args = {
         "x_data": args.get("x_data") or [],
         "y_data": args.get("y_data") or [],
@@ -276,12 +266,12 @@ async def plot_in_2d(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]
         "y_label": args.get("y_label", "Y-Axis"),
         "file_path": args.get("file_path", "2d_figure.png"),
     }
-    return await manager.call_tool("matplotlib", "plot_in_2d", _child_payload(child_args, meta))
+    return await manager.call_tool("matplotlib", "plot_in_2d", child_payload(child_args, meta))
 
 
 @mcp.tool()
 async def plot_in_3d(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-    args, meta = _split_payload(payload)
+    args, meta = split_payload(payload)
     child_args = {
         "x_data": args.get("x_data") or [],
         "y_data": args.get("y_data") or [],
@@ -299,12 +289,12 @@ async def plot_in_3d(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]
         "z_label": args.get("z_label", "Z-Axis"),
         "file_path": args.get("file_path", "3d_figure.png"),
     }
-    return await manager.call_tool("matplotlib", "plot_in_3d", _child_payload(child_args, meta))
+    return await manager.call_tool("matplotlib", "plot_in_3d", child_payload(child_args, meta))
 
 
 @mcp.tool()
 async def double_plot_2d(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-    args, meta = _split_payload(payload)
+    args, meta = split_payload(payload)
     x2_data_address = args.get("x2_data_address")
     y2_data_address = args.get("y2_data_address")
     x2_data_column = args.get("x2_data_column")
@@ -332,12 +322,12 @@ async def double_plot_2d(payload: Optional[Dict[str, Any]] = None) -> Dict[str, 
         "y_label": args.get("y_label", "Y-Axis"),
         "file_path": args.get("file_path", "double_2d_figure.png"),
     }
-    return await manager.call_tool("matplotlib", "double_plot_2d", _child_payload(child_args, meta))
+    return await manager.call_tool("matplotlib", "double_plot_2d", child_payload(child_args, meta))
 
 
 @mcp.tool()
 async def double_plot_3d(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-    args, meta = _split_payload(payload)
+    args, meta = split_payload(payload)
     x2_data_address = args.get("x2_data_address")
     y2_data_address = args.get("y2_data_address")
     z2_data_address = args.get("z2_data_address")
@@ -376,11 +366,11 @@ async def double_plot_3d(payload: Optional[Dict[str, Any]] = None) -> Dict[str, 
         "z_label": args.get("z_label", "Z-Axis"),
         "file_path": args.get("file_path", "double_3d_figure.png"),
     }
-    return await manager.call_tool("matplotlib", "double_plot_3d", _child_payload(child_args, meta))
+    return await manager.call_tool("matplotlib", "double_plot_3d", child_payload(child_args, meta))
 
 @mcp.tool()
 async def euler_diff_solver(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-    args, meta = _split_payload(payload)
+    args, meta = split_payload(payload)
     child_args = {
         "diff_equation": args.get("diff_equation"),
         "x0": args.get("x0", 0),
@@ -388,11 +378,11 @@ async def euler_diff_solver(payload: Optional[Dict[str, Any]] = None) -> Dict[st
         "x_end": args.get("x_end", 10),
         "step": args.get("step", 0.1),
     }
-    return await manager.call_tool("differential_equations", "euler_diff_solver", _child_payload(child_args, meta))
+    return await manager.call_tool("differential_equations", "euler_diff_solver", child_payload(child_args, meta))
 
 @mcp.tool()
 async def trapezoidal_diff_solver(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-    args, meta = _split_payload(payload)
+    args, meta = split_payload(payload)
     child_args = {
         "diff_equation": args.get("diff_equation"),
         "x0": args.get("x0", 0),
@@ -401,32 +391,32 @@ async def trapezoidal_diff_solver(payload: Optional[Dict[str, Any]] = None) -> D
         "step": args.get("step", 0.1),
         "eps": args.get("eps", 1e-6),
     }
-    return await manager.call_tool("differential_equations", "trapezoidal_diff_solver", _child_payload(child_args, meta))
+    return await manager.call_tool("differential_equations", "trapezoidal_diff_solver", child_payload(child_args, meta))
 
 @mcp.tool()
 async def fourier_transform(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-    args, meta = _split_payload(payload)
+    args, meta = split_payload(payload)
     child_args = {
         "signal": args.get("signal"),
         "sample_rate": args.get("sample_rate", 1.0),
         "window": args.get("window", "rect"),
         "normalize": args.get("normalize", False),
     }
-    return await manager.call_tool("fourier", "fourier_transform", _child_payload(child_args, meta))
+    return await manager.call_tool("fourier", "fourier_transform", child_payload(child_args, meta))
 
 @mcp.tool()
 async def inverse_fourier_transform(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-    args, meta = _split_payload(payload)
+    args, meta = split_payload(payload)
     child_args = {
         "real": args.get("real"),
         "imag": args.get("imag"),
         "normalize": args.get("normalize", False),
     }
-    return await manager.call_tool("fourier", "inverse_fourier_transform", _child_payload(child_args, meta))
+    return await manager.call_tool("fourier", "inverse_fourier_transform", child_payload(child_args, meta))
 
 @mcp.tool()
 async def short_time_fourier_transform(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-    args, meta = _split_payload(payload)
+    args, meta = split_payload(payload)
     child_args = {
         "signal": args.get("signal"),
         "window_size": args.get("window_size", 256),
@@ -434,22 +424,22 @@ async def short_time_fourier_transform(payload: Optional[Dict[str, Any]] = None)
         "window": args.get("window", "hann"),
         "sample_rate": args.get("sample_rate", 1.0),
     }
-    return await manager.call_tool("fourier", "short_time_fourier_transform", _child_payload(child_args, meta))
+    return await manager.call_tool("fourier", "short_time_fourier_transform", child_payload(child_args, meta))
 
 @mcp.tool()
 async def power_spectrum(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-    args, meta = _split_payload(payload)
+    args, meta = split_payload(payload)
     child_args = {
         "signal": args.get("signal"),
         "sample_rate": args.get("sample_rate", 1.0),
         "window": args.get("window", "rect"),
         "only_positive": args.get("only_positive", True),
     }
-    return await manager.call_tool("fourier", "power_spectrum", _child_payload(child_args, meta))
+    return await manager.call_tool("fourier", "power_spectrum", child_payload(child_args, meta))
 
 @mcp.tool()
 async def detect_peaks(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-    args, meta = _split_payload(payload)
+    args, meta = split_payload(payload)
     child_args = {
         "data_address": args.get("data_address"),
         "x_data": args.get("x_data") or [],
@@ -461,11 +451,11 @@ async def detect_peaks(payload: Optional[Dict[str, Any]] = None) -> Dict[str, An
         "height": args.get("height"),
         "distance": args.get("distance"),
     }
-    return await manager.call_tool("peak_and_valley", "detect_peaks", _child_payload(child_args, meta))
+    return await manager.call_tool("peak_and_valley", "detect_peaks", child_payload(child_args, meta))
 
 @mcp.tool()
 async def detect_valleys(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-    args, meta = _split_payload(payload)
+    args, meta = split_payload(payload)
     child_args = {
         "data_address": args.get("data_address"),
         "x_data": args.get("x_data") or [],
@@ -477,22 +467,22 @@ async def detect_valleys(payload: Optional[Dict[str, Any]] = None) -> Dict[str, 
         "height": args.get("height"),
         "distance": args.get("distance"),
     }
-    return await manager.call_tool("peak_and_valley", "detect_valleys", _child_payload(child_args, meta))
+    return await manager.call_tool("peak_and_valley", "detect_valleys", child_payload(child_args, meta))
 
 @mcp.tool()
 async def generate_2d_points(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-    args, meta = _split_payload(payload)
+    args, meta = split_payload(payload)
     child_args = {
         "function": args.get("function", "x ** 2") or meta.get("function", "x ** 2") or "x ** 2",  
         "variable": args.get("variable", "x"),
         "x_range": args.get("x_range", [-10, 10]),
         "num_points": args.get("num_points", 100),
     }
-    return await manager.call_tool("draw_function", "generate_2d_points", _child_payload(child_args, meta))
+    return await manager.call_tool("draw_function", "generate_2d_points", child_payload(child_args, meta))
 
 @mcp.tool()
 async def generate_3d_points(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-    args, meta = _split_payload(payload)
+    args, meta = split_payload(payload)
     child_args = {
         "function": args.get("function", "x + y") or meta.get("function", "x + y") or "x + y",
         "variables": args.get("variables", "x,y"),
@@ -500,11 +490,11 @@ async def generate_3d_points(payload: Optional[Dict[str, Any]] = None) -> Dict[s
         "y_range": args.get("y_range", [-10, 10]),
         "num_points": args.get("num_points", 100),
     }
-    return await manager.call_tool("draw_function", "generate_3d_points", _child_payload(child_args, meta))
+    return await manager.call_tool("draw_function", "generate_3d_points", child_payload(child_args, meta))
 
 @mcp.tool()
 async def plot_2d_function(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-    args, meta = _split_payload(payload)
+    args, meta = split_payload(payload)
     child_args = {
         "function": args.get("function", "x ** 2") or meta.get("function", "x ** 2") or "x ** 2",
         "variable": args.get("variable", "x"),
@@ -512,11 +502,11 @@ async def plot_2d_function(payload: Optional[Dict[str, Any]] = None) -> Dict[str
         "num_points": args.get("num_points", 100),
         "file_path": args.get("file_path", "function_plot.png") or meta.get("file_path", "function_plot.png") or "function_plot.png",
     }
-    return await manager.call_tool("draw_function", "plot_2d_function", _child_payload(child_args, meta))
+    return await manager.call_tool("draw_function", "plot_2d_function", child_payload(child_args, meta))
 
 @mcp.tool()
 async def plot_3d_function(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-    args, meta = _split_payload(payload)
+    args, meta = split_payload(payload)
     child_args = {
         "function": args.get("function", "x + y") or meta.get("function", "x + y") or "x + y",
         "variables": args.get("variables", "x,y"),
@@ -525,11 +515,11 @@ async def plot_3d_function(payload: Optional[Dict[str, Any]] = None) -> Dict[str
         "num_points": args.get("num_points", 100),
         "file_path": args.get("file_path", "function_3d_plot.png") or meta.get("file_path", "function_3d_plot.png") or "function_3d_plot.png",
     }
-    return await manager.call_tool("draw_function", "plot_3d_function", _child_payload(child_args, meta))
+    return await manager.call_tool("draw_function", "plot_3d_function", child_payload(child_args, meta))
 
 @mcp.tool()
 async def compute_relevancy(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-    args, meta = _split_payload(payload)
+    args, meta = split_payload(payload)
     child_args = {
         "data_address": args.get("data_address") or meta.get("data_address"),
         "x_data": args.get("x_data") or [],
@@ -539,22 +529,22 @@ async def compute_relevancy(payload: Optional[Dict[str, Any]] = None) -> Dict[st
         "x_data_column": args.get("x_data_column"),
         "y_data_column": args.get("y_data_column"),
     }
-    return await manager.call_tool("compute_relevancy", "compute_relevancy", _child_payload(child_args, meta))
+    return await manager.call_tool("compute_relevancy", "compute_relevancy", child_payload(child_args, meta))
 
 @mcp.tool()
 async def compute_variance(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-    args, meta = _split_payload(payload)
+    args, meta = split_payload(payload)
     child_args = {
         "data_address": args.get("data_address") or meta.get("data_address"),
         "x_data": args.get("x_data") or [],
         "x_data_address": args.get("x_data_address"),
         "x_data_column": args.get("x_data_column"),
     }
-    return await manager.call_tool("compute_relevancy", "compute_variance", _child_payload(child_args, meta))
+    return await manager.call_tool("compute_relevancy", "compute_variance", child_payload(child_args, meta))
 
 @mcp.tool()
 async def generate_square_signal(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-    args, meta = _split_payload(payload)
+    args, meta = split_payload(payload)
     child_args = {
         "frequency": args.get("frequency", 1.0),
         "positive_ratio": args.get("positive_ratio", 0.5),
@@ -564,11 +554,11 @@ async def generate_square_signal(payload: Optional[Dict[str, Any]] = None) -> Di
         "x_end": args.get("x_end", 1.0),
         "sampling_step": args.get("sampling_step"),
     }
-    return await manager.call_tool("signal_generate", "generate_square_signal", _child_payload(child_args, meta))
+    return await manager.call_tool("signal_generate", "generate_square_signal", child_payload(child_args, meta))
 
 @mcp.tool()
 async def generate_sine_signal(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-    args, meta = _split_payload(payload)
+    args, meta = split_payload(payload)
     child_args = {
         "frequency": args.get("frequency", 1.0),
         "amplitude": args.get("amplitude", 1.0),
@@ -577,11 +567,11 @@ async def generate_sine_signal(payload: Optional[Dict[str, Any]] = None) -> Dict
         "x_end": args.get("x_end", 1.0),
         "sampling_step": args.get("sampling_step"),
     }
-    return await manager.call_tool("signal_generate", "generate_sine_signal", _child_payload(child_args, meta))
+    return await manager.call_tool("signal_generate", "generate_sine_signal", child_payload(child_args, meta))
 
 @mcp.tool()
 async def generate_discrete_signal(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-    args, meta = _split_payload(payload)
+    args, meta = split_payload(payload)
     child_args = _omit_none({
         "source_address": args.get("source_address"),
         "data_address": args.get("data_address"),
@@ -593,11 +583,11 @@ async def generate_discrete_signal(payload: Optional[Dict[str, Any]] = None) -> 
         "sampling_end": args.get("sampling_end"),
         "num_samples": args.get("num_samples"),
     })
-    return await manager.call_tool("signal_generate", "generate_discrete_signal", _child_payload(child_args, meta))
+    return await manager.call_tool("signal_generate", "generate_discrete_signal", child_payload(child_args, meta))
 
 @mcp.tool()
 async def draw_signal(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-    args, meta = _split_payload(payload)
+    args, meta = split_payload(payload)
     child_args = {
         "source_address": args.get("source_address"),
         "data_address": args.get("data_address"),
@@ -615,12 +605,12 @@ async def draw_signal(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any
         "file_path": args.get("file_path", "temp_signal_plot.png"),
     }
     child_args = _omit_none(child_args)
-    return await manager.call_tool("signal_generate", "draw_signal", _child_payload(child_args, meta))
+    return await manager.call_tool("signal_generate", "draw_signal", child_payload(child_args, meta))
 
 
 @mcp.tool()
 async def draw_discrete_signal(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-    args, meta = _split_payload(payload)
+    args, meta = split_payload(payload)
     child_args = {
         "source_address": args.get("source_address"),
         "data_address": args.get("data_address"),
@@ -641,7 +631,7 @@ async def draw_discrete_signal(payload: Optional[Dict[str, Any]] = None) -> Dict
         "basefmt": args.get("basefmt", "k-"),
     }
     child_args = _omit_none(child_args)
-    return await manager.call_tool("signal_generate", "draw_discrete_signal", _child_payload(child_args, meta))
+    return await manager.call_tool("signal_generate", "draw_discrete_signal", child_payload(child_args, meta))
 
 @mcp.tool()
 async def list_child_tools(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:

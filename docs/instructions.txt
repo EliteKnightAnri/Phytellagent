@@ -1,23 +1,68 @@
-local_mcp/Client_Server
+local_mcp/
 ├── .venv/                      # 虚拟环境
 ├── .git/                       # Git 仓库 (如果是独立仓库)
 ├── .gitignore                  # Git 忽略规则
-├── .python-version             # Python 版本指定
 ├── pyproject.toml              # 项目和依赖配置
+├── repo.git
+├── requirements.txt
 ├── uv.lock                     # 依赖版本锁定
-├── mcp_settings.json           # 应用配置文件
-├── main.py                     # 应用入口
-├── route/
-│   ├── __init__.py
-│   ├── llm_routes.py  
-│   └── client_routes.py 
-├── service/
-│   ├── service.py 
-│   ├── tools/
+├── uvicorn.log
+├── data/
+│   ├── faiss_store
+│   ├── knowledge_graph  
+│   ├── models
+│   ├── source_documents
+│   └── temp_uploads
+├── scripts/
+│   ├── dev
+│   │   ├── start_debug.bat
+│   │   └── start_debug.sh
+│   └── ops
+├── src/
+│   └── mcp_stack
 │   │   ├── __init__.py
-│   │   ├── bilibili_tool.py      
-│   │   ├── mysql_tool.py  
-│   │   └── system_info_tool.py
-└── model/
-    ├── __init__.py
-    └── schemas.py   
+│   │   └── api
+│   │   │   ├── __init__.py  
+│   │   │   └── api.py
+│   │   └── backend
+│   │   │   ├── __init__.py  
+│   │   │   ├── backend_main.py  
+│   │   │   ├── client.py  
+│   │   │   ├── mcp_settings.json  
+│   │   │   └── tool_specs.py
+│   │   └── frontend
+│   │   │   ├── __init__.py  
+│   │   │   └── frontend_main.py
+│   │   └── knowledge_graph
+│   │   │   ├── __init__.py  
+│   │   │   └── tool.py
+│   │   └── local_packages
+│   │   │   ├── __init__.py  
+│   │   │   ├── data_memory.py  
+│   │   │   ├── list_pack.py  
+│   │   │   ├── status.json  
+│   │   │   └── str2func.py
+│   │   └── knowledge_graph
+│   │   │   ├── __init__.py  
+│   │   │   └── service.py
+│   │   └── models
+│   │   │   ├── __init__.py  
+│   │   │   └── models.py
+│   │   └── rag
+│   │   │   ├── __init__.py  
+│   │   │   └── rag_system.py
+│   │   └── tools
+│   │   │   ├── __init__.py  
+│   │   │   ├── bilibili_tool.py  
+│   │   │   ├── differential_equation_tool.py  
+│   │   │   ├── draw_function_tool.py
+│   │   │   ├── fourier_tool.py
+│   │   │   ├── least_square_tool.py
+│   │   │   ├── matplotlib_tool.py
+│   │   │   ├── mysql_tool.py
+│   │   │   ├── pandas_tool.py
+│   │   │   ├── peak_tool.py
+│   │   │   ├── relevancy_tool.py
+│   │   │   ├── signal_generate_tool.py
+│   │   │   └── system_info_tool.py
+└── tests/

@@ -1,7 +1,7 @@
 [project]
 name = "service"
 version = "0.1.0"
-description = "Reference pyproject from Client_Server_Backend"
+description = "Reference pyproject from Computing_Physics_MCP_Project"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [

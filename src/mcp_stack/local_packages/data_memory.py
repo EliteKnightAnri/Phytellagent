@@ -7,13 +7,15 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 
+ROOT_DIR = Path(__file__).resolve().parents[3]
+DEFAULT_SHARED_STORE = ROOT_DIR / "data" / "temp_uploads" / "shared_data_store"
+
+
 class DataMemory:
     """Disk-backed object registry that works across multiple MCP processes."""
 
     def __init__(self, storage_dir: Optional[str] = None) -> None:
-        tools_dir = Path(__file__).resolve().parent
-        workspace_dir = tools_dir.parent.parent  # Client_Server
-        base_dir = Path(storage_dir) if storage_dir else workspace_dir / "temp_uploads" / "shared_data_store"
+        base_dir = Path(storage_dir) if storage_dir else DEFAULT_SHARED_STORE
         base_dir.mkdir(parents=True, exist_ok=True)
 
         self._db_path = base_dir / "data_memory.sqlite3"

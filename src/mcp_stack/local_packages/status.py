@@ -2,21 +2,38 @@ import json
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
-from my_packages.data_memory import data_memory
+from data_memory import data_memory
 
 
 def split_payload(payload: Optional[Dict[str, Any]] = None) -> Tuple[Dict[str, Any], Dict[str, Any]]:
-    """
-    将请求载荷分解为参数和元数据
-    
-    Args:
-        payload: 包含请求数据的字典，通常包含 "args" 和 "meta" 两个键
-    Returns:
-        一个元组，包含两个字典：第一个是参数字典（args），第二个是元数据字典（meta）。如果payload中缺少这些键，则返回空字典。
-    """
+    """将请求载荷分解为参数和元数据。"""
 
     payload = payload or {}
     return payload.get("args") or {}, payload.get("meta") or {}
+
+
+def build_payload(
+    args: Optional[Dict[str, Any]] = None,
+    meta: Optional[Dict[str, Any]] = None,
+    *,
+    prompt: Optional[str] = None,
+) -> Dict[str, Dict[str, Any]]:
+    """生成标准 MCP 调用载荷，确保 args/meta 始终存在。"""
+
+    payload_args = dict(args or {})
+    payload_meta = dict(meta or {})
+    if prompt:
+        payload_meta.setdefault("prompt", prompt)
+    return {"args": payload_args, "meta": payload_meta}
+
+
+def child_payload(
+    args: Optional[Dict[str, Any]] = None,
+    meta: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Dict[str, Any]]:
+    """聚合器往子服务器转发时使用的简化载荷结构。"""
+
+    return {"args": args or {}, "meta": meta or {}}
 
 
 def success(data: Dict[str, Any]) -> Dict[str, Any]:
