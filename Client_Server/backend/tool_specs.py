@@ -68,7 +68,7 @@ TOOL_SCHEMAS = [
     {
         "type": "function",
         "function": {
-            "name": "execute_query",
+            "name": "SQL_query",
             "description": "Execute a SQL query against the configured MySQL instance and stream the raw rows.",
             "parameters": {
                 "type": "object",
@@ -198,39 +198,6 @@ TOOL_SCHEMAS = [
                     "params": {"type": "array", "items": {"type": "number"}, "description": "Optimized parameters for the model."}
                 },
                 "required": ["model_func_str", "params"],
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function":{
-            "name": "generate_pred_values_2d",
-            "description": "Generate predicted values for 2D data points based on a fitted model.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "x_data": {"type": "array", "items": {"type": "number"}, "description": "X-axis data points."},
-                    "model_func_str": {"type": "string", "description": "A string representation of the model function to fit, e.g. 'a*x + b'."},
-                    "params": {"type": "array", "items": {"type": "number"}, "description": "Optimized parameters for the model."}
-                },
-                "required": ["x_data", "model_func_str", "params"],
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function":{
-            "name": "generate_pred_values_3d",
-            "description": "Generate predicted values for 3D data points based on a fitted model.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "x_data": {"type": "array", "items": {"type": "number"}, "description": "X-axis data points."},
-                    "y_data": {"type": "array", "items": {"type": "number"}, "description": "Y-axis data points."},
-                    "model_func_str": {"type": "string", "description": "A string representation of the model function to fit, e.g. 'a*x + b*y + c'."},
-                    "params": {"type": "array", "items": {"type": "number"}, "description": "Optimized parameters for the model."}
-                },
-                "required": ["x_data", "y_data", "model_func_str", "params"],
             },
         },
     },
@@ -517,7 +484,6 @@ TOOL_SCHEMAS = [
                 },
                 "required": ["function", "variable", "x_range", "num_points"]
             }
-
         }
     },
     {
@@ -609,6 +575,125 @@ TOOL_SCHEMAS = [
                     "x_data_column": {"type": "string", "description": "Column name in the referenced DataFrame to use for x-data."}
                 },
                 "required": ["data_address"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function":{
+            "name": "generate_square_signal",
+            "description": "Generate a square wave signal with specified parameters.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "frequency": {"type": "number", "description": "The frequency of the square wave (Hz)."},
+                    "positive_ratio": {"type": "number", "description": "The ratio of the positive phase to the total period."},
+                    "positive_amplitude": {"type": "number", "description": "The amplitude of the positive phase."},
+                    "negative_amplitude": {"type": "number", "description": "The amplitude of the negative phase."},
+                    "x_start": {"type": "number", "description": "The starting value of the x-axis."},
+                    "x_end": {"type": "number", "description": "The ending value of the x-axis."},
+                    "sampling_step": {"type": "number", "description": "The step size for sampling the signal."}
+                },
+                "required": ["frequency", "positive_ratio", "positive_amplitude", "negative_amplitude", "x_start", "x_end", "sampling_step"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function":{
+            "name": "generate_sine_signal",
+            "description": "Generate a sine wave signal with specified parameters.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "frequency": {"type": "number", "description": "The frequency of the sine wave (Hz)."},
+                    "amplitude": {"type": "number", "description": "The amplitude of the sine wave."},
+                    "phase": {"type": "number", "description": "The phase shift of the sine wave (radians)."},
+                    "x_start": {"type": "number", "description": "The starting value of the x-axis."},
+                    "x_end": {"type": "number", "description": "The ending value of the x-axis."},
+                    "sampling_step": {"type": "number", "description": "The step size for sampling the signal."}
+                },
+                "required": ["frequency", "amplitude", "x_start", "x_end", "sampling_step"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function":{
+            "name": "generate_discrete_signal",
+            "description": "Generate a discrete signal with specified parameters.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "source_address": {"type": "string", "description": "The memory address of the source data for the discrete signal."},
+                    "values": {"type": "array", "items": {"type": "number"}, "description": "Optional array of values for the discrete signal. If not provided, it will be extracted from the source data."},
+                    "x_start": {"type": "number", "description": "The starting value of the x-axis."},
+                    "x_end": {"type": "number", "description": "The ending value of the x-axis."},
+                    "sampling_period": {"type": "number", "description": "Optional sampling period for the discrete signal. If not provided, it will be calculated based on the source data."},
+                    "sampling_start": {"type": "number", "description": "Optional starting point for sampling. If not provided, it will default to x_start."},
+                    "sampling_end": {"type": "number", "description": "Optional ending point for sampling. If not provided, it will default to x_end."}
+                },
+                "required": ["source_address"] or ["values", "x_start", "x_end"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function":{
+            "name": "draw_signal",
+            "description": "Draw a signal based on provided signal data, which can be supplied directly or via a memory address, and return the saved image path.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "source_address": {"type": "string", "description": "The memory address of the source data for the signal."},
+                    "values": {"type": "array", "items": {"type": "number"}, "description": "Optional array of values for the signal. If not provided, it will be generated based on the frequency and x-axis parameters."},
+                    "x_start": {"type": "number", "description": "The starting value of the x-axis."},
+                    "x_end": {"type": "number", "description": "The ending value of the x-axis."},
+                    "sampling_period": {"type": "number", "description": "Optional sampling period for the signal. If not provided, it will be calculated based on the frequency."},
+                    "sampling_start": {"type": "number", "description": "Optional starting point for sampling. If not provided, it will default to x_start."},
+                    "sampling_end": {"type": "number", "description": "Optional ending point for sampling. If not provided, it will default to x_end."},
+                    "figsize": {"type": "array", "items": {"type": "number"},"description": "Optional figure size for the plot, e.g. [6, 4]."},
+                    "title": {"type": "string", "description": "Optional title for the plot."},
+                    "x_label": {"type": "string", "description": "Optional label for the x-axis. Never use Chinese characters to avoid font issues."},
+                    "y_label": {"type": "string", "description": "Optional label for the y-axis. Never use Chinese characters to avoid font issues."},
+                    "file_path": {"type": "string", "description": "File path to save the generated plot image."}
+                },
+                "required": ["source_address", "file_path"] or ["values", "x_start", "x_end", "file_path"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function":{
+            "name": "draw_discrete_signal",
+            "description": "Render a discrete pulse/stem plot for a sampled signal and return the saved image path.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "source_address": {"type": "string", "description": "Memory address of the source data for the signal."},
+                    "data_address": {"type": "string", "description": "Optional dataset address understood by the signal generator."},
+                    "values": {"type": "array", "items": {"type": "number"}, "description": "Optional array of amplitudes when no address is provided."},
+                    "x_start": {"type": "number", "description": "Starting value of the x-axis when values are provided."},
+                    "x_end": {"type": "number", "description": "Ending value of the x-axis when values are provided."},
+                    "sampling_period": {"type": "number", "description": "Optional sampling period for resampling the source signal."},
+                    "sampling_start": {"type": "number", "description": "Optional starting point for sampling."},
+                    "sampling_end": {"type": "number", "description": "Optional ending point for sampling."},
+                    "num_samples": {"type": "integer", "description": "Optional fixed number of discrete samples to take."},
+                    "figsize": {"type": "array", "items": {"type": "number"}, "description": "Figure size, e.g. [6, 4]."},
+                    "title": {"type": "string", "description": "Title for the plot."},
+                    "x_label": {"type": "string", "description": "Label for the x-axis."},
+                    "y_label": {"type": "string", "description": "Label for the y-axis."},
+                    "file_path": {"type": "string", "description": "File path to save the generated plot image."},
+                    "linefmt": {"type": "string", "description": "Matplotlib line format for the stem plot."},
+                    "markerfmt": {"type": "string", "description": "Matplotlib marker format for the stem plot."},
+                    "basefmt": {"type": "string", "description": "Matplotlib base line format for the stem plot."}
+                },
+                "required": [],
+                "anyOf": [
+                    {"required": ["source_address"]},
+                    {"required": ["values"]},
+                    {"required": ["data_address"]}
+                ]
             }
         }
     },

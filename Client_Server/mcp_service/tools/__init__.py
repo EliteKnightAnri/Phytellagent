@@ -8,7 +8,7 @@ __email__ = "jinkelamaster@gmail.com"
 
 __all__ = [
     'search_videos',
-    'execute_query',
+    'SQL_query',
     'get_system_info',
     'get_environment_variables',
     'disk_usage',

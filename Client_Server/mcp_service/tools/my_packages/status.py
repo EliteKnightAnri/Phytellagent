@@ -1,3 +1,6 @@
+import json
+from datetime import datetime
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 from my_packages.data_memory import data_memory
 
@@ -62,3 +65,17 @@ def load_dataset(args: Dict[str, Any], meta: Dict[str, Any]) -> Tuple[Optional[A
     if not address:
         return None, None
     return data_memory.get(address), address
+
+
+def log_debug(log_file: str, event: str, details: Optional[Dict[str, Any]] = None) -> None:
+    _LOG_FILE = Path(__file__).resolve().parent / log_file
+    try:
+        payload = {
+            "ts": datetime.utcnow().isoformat() + "Z",
+            "event": event,
+            "details": details or {},
+        }
+        with _LOG_FILE.open("a", encoding="utf-8") as fh:
+            fh.write(json.dumps(payload, ensure_ascii=False) + "\n")
+    except Exception:
+        pass

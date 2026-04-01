@@ -32,6 +32,9 @@ CHILD_SERVERS: Dict[str, Path] = {
     "fourier": TOOLS_DIR / "fourier_tool.py",
     "peak_and_valley": TOOLS_DIR / "peak_tool.py",
     "draw_function": TOOLS_DIR / "draw_function_tool.py",
+    "compute_relevancy": TOOLS_DIR / "relevancy_tool.py",
+    "signal_generate": TOOLS_DIR / "signal_generate_tool.py",
+
 }
 
 mcp = FastMCP(name="Main Aggregator")
@@ -116,6 +119,11 @@ def _child_payload(args: Optional[Dict[str, Any]] = None, meta: Optional[Dict[st
     return {"args": args or {}, "meta": meta or {}}
 
 
+def _omit_none(values: Dict[str, Any]) -> Dict[str, Any]:
+    """Remove keys whose value is None so child tools can apply their own defaults."""
+    return {key: value for key, value in values.items() if value is not None}
+
+
 @mcp.tool()
 async def search_videos(payload: Optional[Dict[str, Any]] = None) -> Any:
     args, meta = _split_payload(payload)
@@ -126,12 +134,12 @@ async def search_videos(payload: Optional[Dict[str, Any]] = None) -> Any:
 
 
 @mcp.tool()
-async def execute_query(payload: Optional[Dict[str, Any]] = None) -> Any:
+async def SQL_query(payload: Optional[Dict[str, Any]] = None) -> Any:
     args, meta = _split_payload(payload)
     sql = args.get("sql") or args.get("query") or meta.get("prompt")
     if not sql:
         raise ValueError("sql/query is required")
-    return await manager.call_tool("mysql", "execute_query", _child_payload({"query": sql}, meta))
+    return await manager.call_tool("mysql", "SQL_query", _child_payload({"query": sql}, meta))
 
 
 @mcp.tool()
@@ -534,7 +542,7 @@ async def compute_relevancy(payload: Optional[Dict[str, Any]] = None) -> Dict[st
     return await manager.call_tool("compute_relevancy", "compute_relevancy", _child_payload(child_args, meta))
 
 @mcp.tool()
-async def compute_variance_explained(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+async def compute_variance(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     args, meta = _split_payload(payload)
     child_args = {
         "data_address": args.get("data_address") or meta.get("data_address"),
@@ -542,7 +550,98 @@ async def compute_variance_explained(payload: Optional[Dict[str, Any]] = None) -
         "x_data_address": args.get("x_data_address"),
         "x_data_column": args.get("x_data_column"),
     }
-    return await manager.call_tool("compute_relevancy", "compute_variance_explained", _child_payload(child_args, meta))
+    return await manager.call_tool("compute_relevancy", "compute_variance", _child_payload(child_args, meta))
+
+@mcp.tool()
+async def generate_square_signal(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    args, meta = _split_payload(payload)
+    child_args = {
+        "frequency": args.get("frequency", 1.0),
+        "positive_ratio": args.get("positive_ratio", 0.5),
+        "positive_amplitude": args.get("positive_amplitude", 1.0),
+        "negative_amplitude": args.get("negative_amplitude", 0.0),
+        "x_start": args.get("x_start", 0.0),
+        "x_end": args.get("x_end", 1.0),
+        "sampling_step": args.get("sampling_step"),
+    }
+    return await manager.call_tool("signal_generate", "generate_square_signal", _child_payload(child_args, meta))
+
+@mcp.tool()
+async def generate_sine_signal(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    args, meta = _split_payload(payload)
+    child_args = {
+        "frequency": args.get("frequency", 1.0),
+        "amplitude": args.get("amplitude", 1.0),
+        "phase": args.get("phase", 0.0),
+        "x_start": args.get("x_start", 0.0),
+        "x_end": args.get("x_end", 1.0),
+        "sampling_step": args.get("sampling_step"),
+    }
+    return await manager.call_tool("signal_generate", "generate_sine_signal", _child_payload(child_args, meta))
+
+@mcp.tool()
+async def generate_discrete_signal(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    args, meta = _split_payload(payload)
+    child_args = _omit_none({
+        "source_address": args.get("source_address"),
+        "data_address": args.get("data_address"),
+        "values": args.get("values"),
+        "x_start": args.get("x_start"),
+        "x_end": args.get("x_end"),
+        "sampling_period": args.get("sampling_period"),
+        "sampling_start": args.get("sampling_start"),
+        "sampling_end": args.get("sampling_end"),
+        "num_samples": args.get("num_samples"),
+    })
+    return await manager.call_tool("signal_generate", "generate_discrete_signal", _child_payload(child_args, meta))
+
+@mcp.tool()
+async def draw_signal(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    args, meta = _split_payload(payload)
+    child_args = {
+        "source_address": args.get("source_address"),
+        "data_address": args.get("data_address"),
+        "values": args.get("values"),
+        "x_start": args.get("x_start"),
+        "x_end": args.get("x_end"),
+        "sampling_period": args.get("sampling_period"),
+        "sampling_start": args.get("sampling_start"),
+        "sampling_end": args.get("sampling_end"),
+        "num_samples": args.get("num_samples"),
+        "figsize": args.get("figsize", (6, 4)),
+        "title": args.get("title", "Signal Visualization"),
+        "x_label": args.get("x_label", "X-axis"),
+        "y_label": args.get("y_label", "Y-axis"),
+        "file_path": args.get("file_path", "temp_signal_plot.png"),
+    }
+    child_args = _omit_none(child_args)
+    return await manager.call_tool("signal_generate", "draw_signal", _child_payload(child_args, meta))
+
+
+@mcp.tool()
+async def draw_discrete_signal(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    args, meta = _split_payload(payload)
+    child_args = {
+        "source_address": args.get("source_address"),
+        "data_address": args.get("data_address"),
+        "values": args.get("values"),
+        "x_start": args.get("x_start"),
+        "x_end": args.get("x_end"),
+        "sampling_period": args.get("sampling_period"),
+        "sampling_start": args.get("sampling_start"),
+        "sampling_end": args.get("sampling_end"),
+        "num_samples": args.get("num_samples"),
+        "figsize": args.get("figsize", (6, 4)),
+        "title": args.get("title", "Discrete Signal"),
+        "x_label": args.get("x_label", "Sample Index"),
+        "y_label": args.get("y_label", "Amplitude"),
+        "file_path": args.get("file_path", "temp_discrete_signal_plot.png"),
+        "linefmt": args.get("linefmt", "C0-"),
+        "markerfmt": args.get("markerfmt", "C0o"),
+        "basefmt": args.get("basefmt", "k-"),
+    }
+    child_args = _omit_none(child_args)
+    return await manager.call_tool("signal_generate", "draw_discrete_signal", _child_payload(child_args, meta))
 
 @mcp.tool()
 async def list_child_tools(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:

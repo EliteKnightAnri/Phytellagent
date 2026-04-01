@@ -97,6 +97,7 @@ class ChatSession:
             {'id': 'fourier', 'name': 'fourier_tool', 'url': 'mcp_service/tools/fourier_tool.py', 'selected': True},
             {'id': 'peak_and_valley', 'name': 'peak_tool', 'url': 'mcp_service/tools/peak_tool.py', 'selected': True},
             {'id': 'draw_function', 'name': 'draw_function_tool', 'url': 'mcp_service/tools/draw_function_tool.py', 'selected': True},
+            {'id': 'signal_generate', 'name': 'signal_generate_tool', 'url': 'mcp_service/tools/signal_generate_tool.py', 'selected': True}
         ]
         self.mcp_dialog = None
 

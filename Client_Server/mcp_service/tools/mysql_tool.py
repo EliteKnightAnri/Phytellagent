@@ -49,7 +49,7 @@ def _split_payload(payload: Optional[Dict[str, Any]] = None) -> Tuple[Dict[str, 
 
 
 @mcp.tool()
-def execute_query(payload: Optional[Dict[str, Any]] = None, query: Optional[str] = None) -> Dict[str, Any]:
+def SQL_query(payload: Optional[Dict[str, Any]] = None, query: Optional[str] = None) -> Dict[str, Any]:
     """兼容两种调用方式：
     - 被 aggregator 以 kwargs 形式调用：execute_query(query="...")
     - 被直接以 payload 调用：execute_query(payload={"query": "..."})

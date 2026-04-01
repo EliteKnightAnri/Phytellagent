@@ -21,5 +21,8 @@ httpx
 psutil
 matplotlib
 pandas
+numpy
+scipy
+sympy
 # Optional: faiss-cpu may be difficult to install on Windows; install manually if needed
 # faiss-cpu
