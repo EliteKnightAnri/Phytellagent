@@ -11,7 +11,7 @@ build/
 
 # Virtual environments
 .venv/
-.venv
+Client_Server/.venv
 
 # Git files
 repo.git/
