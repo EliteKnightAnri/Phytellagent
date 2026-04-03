@@ -1,9 +1,17 @@
 import numpy as np
 from fastmcp import FastMCP
-from my_packages.data_memory import data_memory
-from my_packages.status import split_payload, success, error, load_dataset
-from my_packages import object_to_list
+import sys
 from typing import Any, Dict, Optional, Tuple, List
+
+BASE_DIR = Path(__file__).resolve().parents[3]
+SRC_DIR = BASE_DIR / "src"
+
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
+    
+from mcp_stack.local_packages.data_memory import data_memory
+from mcp_stack.local_packages.status import success, error, split_payload, load_dataset
+from mcp_stack.local_packages import object_to_list
 
 mcp = FastMCP("Relevancy Computation Server")
 

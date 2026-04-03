@@ -1,13 +1,22 @@
 import numpy as np
 import sympy as sp
+import sys
+from pathlib import Path
 from scipy.optimize import leastsq
 from sympy.printing.pycode import pycode
 from sympy.parsing.sympy_parser import parse_expr, standard_transformations
 from typing import Any, Dict, Optional, Tuple
 from fastmcp import FastMCP
-from my_packages.status import split_payload, success, error, load_dataset
-from my_packages.data_memory import data_memory
-from my_packages.str2func import str2func_2d, str2func_3d
+
+BASE_DIR = Path(__file__).resolve().parents[3]
+SRC_DIR = BASE_DIR / "src"
+
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
+    
+from mcp_stack.local_packages.data_memory import data_memory
+from mcp_stack.local_packages.status import success, error, split_payload, load_dataset
+from mcp_stack.local_packages.str2func import str2func_2d, str2func_3d
 
 mcp = FastMCP("Least Square Method Server")
 

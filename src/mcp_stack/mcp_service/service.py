@@ -10,16 +10,24 @@ from __future__ import annotations
 
 import asyncio
 import json
+import sys
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
-from mcp_stack.local_packages.status import split_payload, child_payload
 from fastmcp import Client, FastMCP
 import traceback
 from datetime import datetime as _dt
 
 
-# Paths to child MCP servers.
+# 通向子服务器的路径配置（相对于 src/mcp_stack/tools 目录）
 BASE_DIR = Path(__file__).resolve().parents[3]
+SRC_DIR = BASE_DIR / "src"
+
+# 确保 src 目录在 sys.path 中，以便正确导入本地包
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
+
+from mcp_stack.local_packages.status import split_payload, child_payload
+
 TOOLS_DIR = BASE_DIR / "src" / "mcp_stack" / "tools"
 
 CHILD_SERVERS: Dict[str, Path] = {

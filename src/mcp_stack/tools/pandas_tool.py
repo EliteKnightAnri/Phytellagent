@@ -1,8 +1,17 @@
 import pandas as pd
+import sys
+from pathlib import Path
 from typing import Dict, Optional, Tuple, Any
 from fastmcp import FastMCP
-# 把数据写进内存，通过内存地址来访问数据，避免了数据在进程间传输的开销
-from my_packages.data_memory import data_memory
+
+BASE_DIR = Path(__file__).resolve().parents[3]
+SRC_DIR = BASE_DIR / "src"
+
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
+    
+from mcp_stack.local_packages.data_memory import data_memory
+from mcp_stack.local_packages.status import success, error, split_payload, load_dataset
 
 mcp = FastMCP("Pandas Toolbox Server")
 

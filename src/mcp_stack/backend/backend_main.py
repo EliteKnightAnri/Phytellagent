@@ -69,10 +69,22 @@ DEEPSEEK_BASE_URL = os.environ.get("DEEPSEEK_BASE_URL", "https://api.deepseek.co
 if not DEEPSEEK_API_KEY:
     print("[WARN] DEEPSEEK_API_KEY 未设置（DeepSeek 大模型调用将失败）")
 
-client = AsyncOpenAI(
-    api_key=DEEPSEEK_API_KEY,
-    base_url=DEEPSEEK_BASE_URL
-)
+client = None
+
+
+def _build_deepseek_client() -> Optional[AsyncOpenAI]:
+    api_key = os.environ.get("DEEPSEEK_API_KEY")
+    base_url = os.environ.get("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
+    if not api_key:
+        return None
+    return AsyncOpenAI(api_key=api_key, base_url=base_url)
+
+
+def _require_deepseek_client() -> AsyncOpenAI:
+    deepseek_client = _build_deepseek_client()
+    if deepseek_client is None:
+        raise HTTPException(status_code=400, detail="DEEPSEEK_API_KEY 未设置")
+    return deepseek_client
 
 rag_engine = None
 
@@ -600,12 +612,18 @@ async def set_deepseek_env(body: DeepseekEnvRequest):
     用于立刻生效但不想修改 `mcp_settings.json` 的场景。
     """
     changed = False
+    global DEEPSEEK_API_KEY, DEEPSEEK_BASE_URL, client
     if body.deepseek_api_key is not None:
         os.environ["DEEPSEEK_API_KEY"] = body.deepseek_api_key
+        DEEPSEEK_API_KEY = body.deepseek_api_key
         changed = True
     if body.deepseek_base_url is not None:
         os.environ["DEEPSEEK_BASE_URL"] = body.deepseek_base_url
+        DEEPSEEK_BASE_URL = body.deepseek_base_url
         changed = True
+
+    if changed:
+        client = _build_deepseek_client()
 
     # 尝试重新加载依赖于环境变量的模块（例如 backend.client）以使变更生效
     try:
@@ -987,7 +1005,8 @@ async def chat_endpoint(request: FrontendChatRequest):
             messages.append({"role": "user", "content": user_prompt})
 
             try:
-                stream = await client.chat.completions.create(
+                deepseek_client = _require_deepseek_client()
+                stream = await deepseek_client.chat.completions.create(
                     model="deepseek-chat",
                     messages=messages,
                     stream=True,

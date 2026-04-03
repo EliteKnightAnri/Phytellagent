@@ -1,16 +1,24 @@
 import json
+import sys
 from datetime import datetime
 from pathlib import Path
 import matplotlib.pyplot as plt
 plt.rcParams['font.family'] = 'DejaVu Sans'  # Ensure consistent font rendering across platforms
 from typing import Any, Dict, List, Optional, Tuple
 from fastmcp import FastMCP
-from my_packages.status import split_payload, success, error
-from my_packages.data_memory import data_memory
+
+BASE_DIR = Path(__file__).resolve().parents[3]
+SRC_DIR = BASE_DIR / "src"
+
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
+    
+from mcp_stack.local_packages.data_memory import data_memory
+from mcp_stack.local_packages.status import success, error, split_payload, load_dataset
 
 mcp = FastMCP("Matplotlib Toolbox Server")
 
-_LOG_FILE = Path(__file__).resolve().parent / "matplotlib_tool.debug.log"
+_LOG_FILE = Path(__file__).resolve() / "matplotlib_tool.debug.log"
 
 
 def _log_debug(event: str, details: Optional[Dict[str, Any]] = None) -> None:

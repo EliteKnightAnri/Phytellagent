@@ -582,7 +582,7 @@ class ChatSession:
                         status_label.text = '未设置 API Key'
 
                 async def save_persistent():
-                    key = api_input.value.strip()
+                    key = (api_input.value or '').strip()
                     if not key:
                         ui.notify('请输入 API Key', type='negative')
                         return
@@ -594,7 +594,7 @@ class ChatSession:
                         ui.notify('保存失败', type='negative')
 
                 async def apply_runtime_only():
-                    key = api_input.value.strip()
+                    key = (api_input.value or '').strip()
                     base = (base_url_input.value or '').strip() or None
                     if not key:
                         ui.notify('请输入 API Key', type='negative')
@@ -607,8 +607,8 @@ class ChatSession:
                         ui.notify('应用失败', type='negative')
 
                 with ui.row().classes('justify-end gap-2'):
-                    ui.button('仅应用（内存）', on_click=lambda _: asyncio.create_task(apply_runtime_only())).props('unelevated')
-                    ui.button('保存到设置', on_click=lambda _: asyncio.create_task(save_persistent())).props('unelevated')
+                    ui.button('仅应用（内存）', on_click=apply_runtime_only).props('unelevated')
+                    ui.button('保存到设置', on_click=save_persistent).props('unelevated')
                     ui.button('取消', on_click=lambda _: dlg.close()).props('flat')
 
         self.settings_dialog = dlg

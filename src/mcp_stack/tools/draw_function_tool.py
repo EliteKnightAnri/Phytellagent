@@ -1,10 +1,19 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import sympy as sp
+import sys
+from pathlib import Path
 from fastmcp import FastMCP
 from typing import Any, Dict, Optional, Tuple
-from my_packages.status import split_payload, success, error
-from my_packages.str2func import str2func_2d, str2func_3d
+
+BASE_DIR = Path(__file__).resolve().parents[3]
+SRC_DIR = BASE_DIR / "src"
+
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
+    
+from mcp_stack.local_packages.status import success, error, split_payload
+from mcp_stack.local_packages.str2func import str2func_2d, str2func_3d
 
 mcp = FastMCP("FunctionDrawer")
 

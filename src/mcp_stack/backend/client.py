@@ -17,10 +17,22 @@ except ImportError:  # pragma: no cover - fallback for script execution
 DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY")
 DEEPSEEK_BASE_URL = os.environ.get("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1")
 
-agent = AsyncOpenAI(
-    api_key=DEEPSEEK_API_KEY,
-    base_url=DEEPSEEK_BASE_URL,
-)
+agent = None
+
+
+def _build_agent() -> Optional[AsyncOpenAI]:
+    api_key = os.environ.get("DEEPSEEK_API_KEY")
+    base_url = os.environ.get("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1")
+    if not api_key:
+        return None
+    return AsyncOpenAI(api_key=api_key, base_url=base_url)
+
+
+def _require_agent() -> AsyncOpenAI:
+    deepseek_agent = _build_agent()
+    if deepseek_agent is None:
+        raise RuntimeError("DEEPSEEK_API_KEY 未设置")
+    return deepseek_agent
 
 tools = get_tool_schemas()
 logger = logging.getLogger(__name__)
@@ -154,7 +166,8 @@ async def ai_agent(client: Client, user_input: str) -> str:
 
 
 async def _stream_chat_completion(messages: List[Dict[str, Any]], emit_tokens: bool = True) -> Dict[str, Any]:
-    stream = await agent.chat.completions.create(
+    deepseek_agent = _require_agent()
+    stream = await deepseek_agent.chat.completions.create(
         model="deepseek-chat",
         messages=messages,
         tools=tools,
@@ -211,7 +224,8 @@ async def create_chat_completion(messages: List[Dict[str, Any]], stream_output: 
     if stream_output:
         return await _stream_chat_completion(messages)
 
-    response = await agent.chat.completions.create(model="deepseek-chat", messages=messages, tools=tools, tool_choice="auto")
+    deepseek_agent = _require_agent()
+    response = await deepseek_agent.chat.completions.create(model="deepseek-chat", messages=messages, tools=tools, tool_choice="auto")
     return _message_to_dict(response.choices[0].message)
 
 
