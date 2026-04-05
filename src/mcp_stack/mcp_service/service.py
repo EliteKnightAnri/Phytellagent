@@ -43,7 +43,7 @@ CHILD_SERVERS: Dict[str, Path] = {
     "draw_function": TOOLS_DIR / "draw_function_tool.py",
     "compute_relevancy": TOOLS_DIR / "relevancy_tool.py",
     "signal_generate": TOOLS_DIR / "signal_generate_tool.py",
-
+    "crystal_basic": TOOLS_DIR / "crystal_basic_tool.py",
 }
 
 mcp = FastMCP(name="Main Aggregator")
@@ -640,6 +640,20 @@ async def draw_discrete_signal(payload: Optional[Dict[str, Any]] = None) -> Dict
     }
     child_args = _omit_none(child_args)
     return await manager.call_tool("signal_generate", "draw_discrete_signal", child_payload(child_args, meta))
+
+
+@mcp.tool()
+async def crystal_orientation_for_cubics(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    args, meta = split_payload(payload)
+    child_args = {
+        "uvw": args.get("uvw", [1, 0, 0]),
+        "hkl": args.get("hkl", [1, 0, 0]),
+        "input_type": args.get("input_type", "uvw"),
+        "figsize": args.get("figsize", (6, 6)),
+        "title": args.get("title", "Crystal Orientation"),
+        "file_path": args.get("file_path", "docs/generated_images/crystal_orientation.png"),
+    }
+    return await manager.call_tool("crystal_basic", "crystal_orientation_for_cubics", child_payload(child_args, meta))
 
 @mcp.tool()
 async def list_child_tools(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:

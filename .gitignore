@@ -9,6 +9,7 @@ build/
 .ipynb_checkpoints/
 .vscode/
 local_history.json
+docs/generated_images/
 
 # Virtual environments
 .venv/

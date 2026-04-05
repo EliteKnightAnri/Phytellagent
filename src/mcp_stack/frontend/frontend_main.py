@@ -87,18 +87,19 @@ class ChatSession:
         
         # MCP 工具列表（如果写入新的工具记得在这里添加）
         self.mcp_tools = [
-            {'id': 'bilibili', 'name': 'bilibili_tool', 'url': 'mcp_service/tools/bilibili_tool.py', 'selected': True},
-            {'id': 'mysql', 'name': 'mysql_tool', 'url': 'mcp_service/tools/mysql_tool.py', 'selected': True},
-            {'id': 'system_info', 'name': 'system_info_tool', 'url': 'mcp_service/tools/system_info_tool.py', 'selected': True},
-            {'id': 'matplotlib', 'name': 'matplotlib_tool', 'url': 'mcp_service/tools/matplotlib_tool.py', 'selected': True},
-            {'id': 'pandas', 'name': 'pandas_tool', 'url': 'mcp_service/tools/pandas_tool.py', 'selected': True},
-            {'id': 'least_square', 'name': 'least_square_tool', 'url': 'mcp_service/tools/least_square_tool.py', 'selected': True},
-            {'id': 'file_convert', 'name': 'file_convert_tool', 'url': 'mcp_service/tools/file_convert_tool.py', 'selected': True},
-            {'id': 'differential_equations', 'name': 'differential_equations_tool', 'url': 'mcp_service/tools/differential_equations_tool.py', 'selected': True},
-            {'id': 'fourier', 'name': 'fourier_tool', 'url': 'mcp_service/tools/fourier_tool.py', 'selected': True},
-            {'id': 'peak_and_valley', 'name': 'peak_tool', 'url': 'mcp_service/tools/peak_tool.py', 'selected': True},
-            {'id': 'draw_function', 'name': 'draw_function_tool', 'url': 'mcp_service/tools/draw_function_tool.py', 'selected': True},
-            {'id': 'signal_generate', 'name': 'signal_generate_tool', 'url': 'mcp_service/tools/signal_generate_tool.py', 'selected': True}
+            {'id': 'bilibili', 'name': 'bilibili_tool', 'url': 'src/mcp_stack/tools/bilibili_tool.py', 'selected': True},
+            {'id': 'mysql', 'name': 'mysql_tool', 'url': 'src/mcp_stack/tools/mysql_tool.py', 'selected': True},
+            {'id': 'system_info', 'name': 'system_info_tool', 'url': 'src/mcp_stack/tools/system_info_tool.py', 'selected': True},
+            {'id': 'matplotlib', 'name': 'matplotlib_tool', 'url': 'src/mcp_stack/tools/matplotlib_tool.py', 'selected': True},
+            {'id': 'pandas', 'name': 'pandas_tool', 'url': 'src/mcp_stack/tools/pandas_tool.py', 'selected': True},
+            {'id': 'least_square', 'name': 'least_square_tool', 'url': 'src/mcp_stack/tools/least_square_tool.py', 'selected': True},
+            {'id': 'file_convert', 'name': 'file_convert_tool', 'url': 'src/mcp_stack/tools/file_convert_tool.py', 'selected': True},
+            {'id': 'differential_equations', 'name': 'differential_equations_tool', 'url': 'src/mcp_stack/tools/differential_equations_tool.py', 'selected': True},
+            {'id': 'fourier', 'name': 'fourier_tool', 'url': 'src/mcp_stack/tools/fourier_tool.py', 'selected': True},
+            {'id': 'peak_and_valley', 'name': 'peak_tool', 'url': 'src/mcp_stack/tools/peak_tool.py', 'selected': True},
+            {'id': 'draw_function', 'name': 'draw_function_tool', 'url': 'src/mcp_stack/tools/draw_function_tool.py', 'selected': True},
+            {'id': 'signal_generate', 'name': 'signal_generate_tool', 'url': 'src/mcp_stack/tools/signal_generate_tool.py', 'selected': True},
+            {'id': 'crystal_basic', 'name': 'crystal_basic_tool', 'url': 'src/mcp_stack/tools/crystal_basic_tool.py', 'selected': True},
         ]
         self.mcp_dialog = None
 

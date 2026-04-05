@@ -697,6 +697,29 @@ TOOL_SCHEMAS = [
             }
         }
     },
+    {
+        "type": "function",
+        "function":{
+            "name": "crystal_orientation_for_cubics",
+            "description": "Calculate and visualize the crystal orientation for cubic crystals based on provided Miller indices or crystallographic directions, and return the saved image path.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "uvw": {"type": "array", "items": {"type": "integer"}, "description": "Crystallographic direction indices (Miller indices) for the cubic crystal, e.g. [1, 0, 0]."},
+                    "hkl": {"type": "array", "items": {"type": "integer"}, "description": "Miller indices for the crystal plane, e.g. [1, 0, 0]."},
+                    "input_type": {"type": "string", "enum": ["uvw", "hkl"], "description": "Specify whether the input is a crystallographic direction (uvw) or a crystal plane (hkl)."},
+                    "figsize": {"type": "array", "items": {"type": "number"}, "description": "Figure size for the plot, e.g. [6, 6]."},
+                    "title": {"type": "string", "description": "Title for the plot."},
+                    "file_path": {"type": "string", "description": "File path to save the generated plot image. If not provided, a default path will be used."}
+                },
+                "required": ["input_type"],
+                "anyOf": [
+                    {"required": ["uvw"], "properties": {"input_type": {"const": "uvw"}}},
+                    {"required": ["hkl"], "properties": {"input_type": {"const": "hkl"}}}
+                ]
+            }
+        }
+    },
 ]
 
 
